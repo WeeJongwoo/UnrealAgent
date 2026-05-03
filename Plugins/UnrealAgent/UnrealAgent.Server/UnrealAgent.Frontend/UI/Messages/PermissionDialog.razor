@@ -1,0 +1,41 @@
+﻿@inherits JsComponentBase
+@using UnrealAgent.Backend.Security
+
+<!-- 도구 실행 권한 요청 플로팅 배너입니다. 입력 영역 바로 위에 표시됩니다. -->
+<div class="absolute left-1/2 -translate-x-1/2 -top-20 z-30 animate-in fade-in slide-in-from-bottom-2 duration-300 w-full max-w-2xl px-4 pointer-events-none">
+    <div class="pointer-events-auto bg-[#1b1b1b]/95 backdrop-blur-md border border-[#0070e0]/30 rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex items-center justify-between py-3 px-5 gap-5 ring-1 ring-white/5">
+        <div class="flex items-center gap-3 min-w-0 flex-1">
+            <div class="w-8 h-8 rounded-md bg-[#0070e0]/10 border border-[#0070e0]/20 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-[#0070e0] text-[18px] animate-pulse">verified_user</span>
+            </div>
+            <div class="flex flex-col gap-0.5 min-w-0">
+                <div class="flex items-center gap-2">
+                    <span class="text-[12px] font-bold text-[#e0e0e0] tracking-widest leading-tight font-sans shrink-0">권한 요청</span>
+                    <span class="text-[12px] text-[#0070e0] font-bold font-mono bg-[#0070e0]/10 px-2 py-0.5 rounded border border-[#0070e0]/20 shrink-0">@Request.ToolName</span>
+                </div>
+                @if (!string.IsNullOrEmpty(Summary))
+                {
+                    <span class="text-[11px] text-[#bbb] font-sans leading-snug break-words">@Summary</span>
+                }
+            </div>
+        </div>
+        <div class="h-8 w-px bg-[#333]"></div>
+        <div class="flex items-center gap-2.5 shrink-0">
+            <button class="flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-transparent hover:bg-[#2a2a2a] border border-[#333] hover:border-[#0070e0] text-[12px] text-[#ccc] hover:text-white transition-all group focus:outline-none cursor-pointer"
+                    @onclick="() => OnDecision.InvokeAsync(ToolPermission.Allow)">
+                <span class="font-mono text-[#555] group-hover:text-[#0070e0] font-bold">1.</span>
+                <span class="font-medium font-sans">허용</span>
+            </button>
+            <button class="flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-transparent hover:bg-[#2a2a2a] border border-[#333] hover:border-[#0070e0] text-[12px] text-[#ccc] hover:text-white transition-all group focus:outline-none hover:shadow-[0_0_15px_rgba(0,112,224,0.2)] cursor-pointer"
+                    @onclick="() => OnDecision.InvokeAsync(ToolPermission.AlwaysAllow)">
+                <span class="font-mono text-[#555] group-hover:text-[#0070e0] font-bold">2.</span>
+                <span class="font-medium font-sans">항상 허용</span>
+            </button>
+            <button class="flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-transparent hover:bg-[#2a2a2a] border border-[#333] hover:border-[#e05e5e] text-[12px] text-[#ccc] hover:text-[#e05e5e] transition-all group focus:outline-none cursor-pointer"
+                    @onclick="() => OnDecision.InvokeAsync(ToolPermission.Deny)">
+                <span class="font-mono text-[#555] group-hover:text-[#e05e5e] font-bold">3.</span>
+                <span class="font-medium font-sans">거부</span>
+            </button>
+        </div>
+    </div>
+</div>

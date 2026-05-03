@@ -1,0 +1,26 @@
+﻿@using UnrealAgent.Backend.Mode
+
+<!-- 모드 스위처입니다. -->
+<div class="flex items-center">
+    <div class="flex items-center gap-0.5 bg-[#121212] p-0.5 rounded border border-[#2a2a2a] shadow-md h-7">
+        @foreach (AgentMode Mode in Enum.GetValues<AgentMode>())
+        {
+            bool bIsActive = (Mode == CurrentMode);
+            <button type="button" @onclick="() => SetMode(Mode)"
+                    class="flex items-center gap-1.5 px-3 h-full rounded transition-all
+                           @(bIsActive
+                               ? "bg-[#1a1a1a] border border-[#333] shadow-inner"
+                               : "border border-transparent opacity-60 hover:opacity-100")">
+                <span class="w-1.5 h-1.5 rounded-full @DotColor(Mode, bIsActive)"></span>
+                <span class="text-[9px] font-bold uppercase tracking-wider @TextColor(Mode, bIsActive)">
+                    @Mode.ToString()
+                </span>
+            </button>
+            
+            @if (Mode != AgentMode.Plan)
+            {
+                <div class="w-px h-3 bg-[#333]"></div>
+            }
+        }
+    </div>
+</div>

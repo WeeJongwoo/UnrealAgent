@@ -1,0 +1,1208 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UnrealAgent 아키텍처 다이어그램</title>
+<style>
+:root{
+  --ue:#2b7fff; --ue-bg:#e8f1ff;
+  --cs:#8b5cf6; --cs-bg:#f1ecff;
+  --api:#f97316; --api-bg:#ffeede;
+  --mcp:#16a34a;
+  --ink:#1f2937; --muted:#6b7280; --line:#d1d5db; --bg:#f9fafb; --card:#fff;
+  --code-bg:#0f172a; --code-fg:#e2e8f0;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;font-family:-apple-system,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;color:var(--ink);background:var(--bg);line-height:1.55}
+header{background:#fff;border-bottom:1px solid var(--line);padding:18px 28px;position:sticky;top:0;z-index:10}
+header h1{margin:0 0 8px;font-size:20px}
+header p{margin:0;color:var(--muted);font-size:13px}
+nav{margin-top:12px;display:flex;gap:6px;flex-wrap:wrap}
+nav button{border:1px solid var(--line);background:#fff;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500}
+nav button[aria-selected="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+main{max-width:1280px;margin:0 auto;padding:24px 20px 80px}
+section{display:none}
+section[data-active]{display:block}
+h2{border-left:4px solid var(--ink);padding-left:10px;margin:10px 0 18px;font-size:19px}
+h3{margin:28px 0 12px;font-size:15px;color:#111}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:20px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:10px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{display:inline-block;width:14px;height:3px;background:#000}
+.ue{background:var(--ue-bg);border-color:var(--ue)}
+.cs{background:var(--cs-bg);border-color:var(--cs)}
+.api{background:var(--api-bg);border-color:var(--api)}
+code,pre{font-family:ui-monospace,"Cascadia Code",Consolas,Menlo,monospace;font-size:12.5px}
+code{background:#eef2f7;padding:1px 5px;border-radius:3px}
+pre{background:var(--code-bg);color:var(--code-fg);padding:12px 14px;border-radius:8px;overflow:auto;margin:8px 0}
+pre code{background:transparent;color:inherit;padding:0}
+details{margin:8px 0;border:1px solid var(--line);border-radius:6px;padding:6px 10px;background:#fff}
+details summary{cursor:pointer;font-size:12px;font-weight:600;color:var(--muted)}
+details[open] summary{color:var(--ink);margin-bottom:6px}
+table{border-collapse:collapse;width:100%;background:#fff;font-size:13px;margin:8px 0}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:#f3f4f6;font-weight:600}
+tr:nth-child(even) td{background:#fafafa}
+.step{display:grid;grid-template-columns:40px 1fr;gap:12px;margin:10px 0;align-items:start}
+.step .n{background:var(--ink);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;margin-top:2px}
+.step .body{border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:#fff}
+.step .body h4{margin:0 0 4px;font-size:13.5px}
+.step .body .meta{font-size:11.5px;color:var(--muted);font-family:ui-monospace,monospace}
+.pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.pill.ue{background:var(--ue-bg);color:var(--ue);border:1px solid var(--ue)}
+.pill.cs{background:var(--cs-bg);color:var(--cs);border:1px solid var(--cs)}
+.pill.api{background:var(--api-bg);color:var(--api);border:1px solid var(--api)}
+.pill.mcp{background:#dcfce7;color:var(--mcp);border:1px solid var(--mcp)}
+svg{width:100%;height:auto;display:block}
+svg a{cursor:pointer}
+svg a:hover rect.hit{fill:rgba(31,41,55,.08)}
+svg a:focus{outline:none}
+svg a:focus rect.hit{fill:rgba(31,41,55,.12);stroke:var(--ink);stroke-width:1.5;stroke-dasharray:4 3}
+.note{font-size:12.5px;color:var(--muted);margin-top:6px}
+html{scroll-behavior:smooth}
+.step{scroll-margin-top:120px;transition:background .6s}
+.step:target .body{box-shadow:0 0 0 3px var(--ink);background:#fffbeb}
+.step:target .n{background:#f59e0b}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>UnrealAgent 아키텍처 다이어그램</h1>
+  <p>UE 에디터(C++) ↔ C# Backend(Blazor) ↔ Claude API — 세 프로세스의 전체 구조·부팅 흐름·도구 호출 체인</p>
+  <nav role="tablist">
+    <button role="tab" data-tab="arch" aria-selected="true">① 아키텍처 · 부팅</button>
+    <button role="tab" data-tab="register" aria-selected="false">② 툴 등록</button>
+    <button role="tab" data-tab="flow" aria-selected="false">③ 메시지 흐름</button>
+    <button role="tab" data-tab="ref" aria-selected="false">④ 레퍼런스</button>
+  </nav>
+</header>
+
+<main>
+
+<!-- ========== 탭 ① 아키텍처 + 부팅 ========== -->
+<section id="arch" data-active>
+  <h2>① 시스템 아키텍처 & 부팅 시퀀스</h2>
+
+  <div class="card">
+    <h3>A. 프로세스 수준 다이어그램</h3>
+    <div class="legend">
+      <span><i style="background:var(--ue)"></i>UE 에디터 (C++)</span>
+      <span><i style="background:var(--cs)"></i>C# Backend (Blazor)</span>
+      <span><i style="background:var(--api)"></i>Claude API</span>
+      <span><i style="background:var(--mcp);height:3px;border:none"></i>MCP (JSON-RPC/HTTP)</span>
+      <span><i style="background:var(--api);height:0;border-top:2px dashed var(--api)"></i>HTTPS</span>
+    </div>
+    <svg viewBox="0 0 1200 420" role="img" aria-label="시스템 아키텍처">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#374151"/></marker>
+        <marker id="arrMcp" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/></marker>
+        <marker id="arrApi" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f97316"/></marker>
+      </defs>
+
+      <!-- UE Editor -->
+      <rect x="30" y="40" width="340" height="340" rx="12" fill="#e8f1ff" stroke="#2b7fff" stroke-width="2"/>
+      <text x="200" y="70" text-anchor="middle" font-size="16" font-weight="700" fill="#1e3a8a">UE 에디터 (C++)</text>
+      <text x="200" y="90" text-anchor="middle" font-size="11" fill="#475569">EditorSubsystem · HTTP :55559</text>
+      <rect x="60" y="115" width="280" height="50" rx="6" fill="#fff" stroke="#2b7fff"/>
+      <text x="200" y="135" text-anchor="middle" font-size="13" font-weight="600">UMcpServer</text>
+      <text x="200" y="152" text-anchor="middle" font-size="11" fill="#475569">ToolMap · ToolDefinitions · HttpRouter</text>
+      <rect x="60" y="180" width="280" height="50" rx="6" fill="#fff" stroke="#2b7fff"/>
+      <text x="200" y="200" text-anchor="middle" font-size="13" font-weight="600">FMcpTool 파생 구조체</text>
+      <text x="200" y="217" text-anchor="middle" font-size="11" fill="#475569">FExecutePythonTool, ...</text>
+      <rect x="60" y="245" width="280" height="50" rx="6" fill="#fff" stroke="#2b7fff"/>
+      <text x="200" y="265" text-anchor="middle" font-size="13" font-weight="600">리플렉션 시스템</text>
+      <text x="200" y="282" text-anchor="middle" font-size="11" fill="#475569">UScriptStruct · UPROPERTY meta</text>
+      <rect x="60" y="310" width="280" height="50" rx="6" fill="#fff" stroke="#2b7fff"/>
+      <text x="200" y="330" text-anchor="middle" font-size="13" font-weight="600">Python Plugin</text>
+      <text x="200" y="347" text-anchor="middle" font-size="11" fill="#475569">IPythonScriptPlugin · GEditor Transaction</text>
+
+      <!-- Backend -->
+      <rect x="430" y="40" width="340" height="340" rx="12" fill="#f1ecff" stroke="#8b5cf6" stroke-width="2"/>
+      <text x="600" y="70" text-anchor="middle" font-size="16" font-weight="700" fill="#4c1d95">C# Backend (Blazor)</text>
+      <text x="600" y="90" text-anchor="middle" font-size="11" fill="#475569">ASP.NET :55558 · UnrealAgent.Frontend.exe</text>
+      <rect x="460" y="115" width="280" height="50" rx="6" fill="#fff" stroke="#8b5cf6"/>
+      <text x="600" y="135" text-anchor="middle" font-size="13" font-weight="600">AgentRunner + AgentLoop</text>
+      <text x="600" y="152" text-anchor="middle" font-size="11" fill="#475569">HostedService · MessageQueue · while(true)</text>
+      <rect x="460" y="180" width="280" height="50" rx="6" fill="#fff" stroke="#8b5cf6"/>
+      <text x="600" y="200" text-anchor="middle" font-size="13" font-weight="600">ToolRegistry</text>
+      <text x="600" y="217" text-anchor="middle" font-size="11" fill="#475569">Dictionary&lt;string, ToolEntry&gt;</text>
+      <rect x="460" y="245" width="280" height="50" rx="6" fill="#fff" stroke="#8b5cf6"/>
+      <text x="600" y="265" text-anchor="middle" font-size="13" font-weight="600">McpClient (URL 보유)</text>
+      <text x="600" y="282" text-anchor="middle" font-size="11" fill="#475569">initialize · tools/list · tools/call</text>
+      <rect x="460" y="310" width="280" height="50" rx="6" fill="#fff" stroke="#8b5cf6"/>
+      <text x="600" y="330" text-anchor="middle" font-size="13" font-weight="600">Razor UI</text>
+      <text x="600" y="347" text-anchor="middle" font-size="11" fill="#475569">Chat.razor · ChatStore · ChatEvent</text>
+
+      <!-- Claude -->
+      <rect x="830" y="40" width="340" height="340" rx="12" fill="#ffeede" stroke="#f97316" stroke-width="2"/>
+      <text x="1000" y="70" text-anchor="middle" font-size="16" font-weight="700" fill="#9a3412">Claude API</text>
+      <text x="1000" y="90" text-anchor="middle" font-size="11" fill="#475569">api.anthropic.com/v1/messages</text>
+      <rect x="860" y="115" width="280" height="80" rx="6" fill="#fff" stroke="#f97316"/>
+      <text x="1000" y="140" text-anchor="middle" font-size="13" font-weight="600">Messages API (Streaming)</text>
+      <text x="1000" y="160" text-anchor="middle" font-size="11" fill="#475569">tools[] · tool_use · tool_result</text>
+      <text x="1000" y="178" text-anchor="middle" font-size="11" fill="#475569">stop_reason · stream events</text>
+      <rect x="860" y="215" width="280" height="60" rx="6" fill="#fff" stroke="#f97316"/>
+      <text x="1000" y="235" text-anchor="middle" font-size="13" font-weight="600">모델 (Opus / Sonnet / Haiku)</text>
+      <text x="1000" y="255" text-anchor="middle" font-size="11" fill="#475569">prompt → 텍스트/도구 선택 판단</text>
+
+      <!-- 연결선 -->
+      <line x1="370" y1="205" x2="430" y2="205" stroke="#16a34a" stroke-width="3" marker-end="url(#arrMcp)" marker-start="url(#arrMcp)"/>
+      <text x="400" y="195" text-anchor="middle" font-size="11" font-weight="600" fill="#16a34a">MCP</text>
+      <text x="400" y="230" text-anchor="middle" font-size="10" fill="#16a34a">HTTP :55559/mcp</text>
+
+      <line x1="770" y1="205" x2="830" y2="205" stroke="#f97316" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arrApi)" marker-start="url(#arrApi)"/>
+      <text x="800" y="195" text-anchor="middle" font-size="11" font-weight="600" fill="#f97316">HTTPS</text>
+      <text x="800" y="230" text-anchor="middle" font-size="10" fill="#f97316">Anthropic SDK</text>
+    </svg>
+    <p class="note">UE가 <b>MCP 서버</b>, Backend가 <b>MCP 클라이언트 + Anthropic 클라이언트</b>로 동시 동작. Claude는 Backend만 인지하며 UE의 존재를 직접 알지 못함.</p>
+  </div>
+
+  <div class="card">
+    <h3>B. 부팅 시퀀스 (시간 축 위→아래)</h3>
+    <svg viewBox="0 0 1200 640" role="img" aria-label="부팅 시퀀스">
+      <!-- 레인 헤더 -->
+      <rect x="40" y="20" width="340" height="34" fill="#e8f1ff" stroke="#2b7fff"/>
+      <text x="210" y="42" text-anchor="middle" font-size="13" font-weight="700" fill="#1e3a8a">UE 에디터</text>
+      <rect x="430" y="20" width="340" height="34" fill="#f1ecff" stroke="#8b5cf6"/>
+      <text x="600" y="42" text-anchor="middle" font-size="13" font-weight="700" fill="#4c1d95">C# Backend</text>
+      <rect x="820" y="20" width="340" height="34" fill="#ffeede" stroke="#f97316"/>
+      <text x="990" y="42" text-anchor="middle" font-size="13" font-weight="700" fill="#9a3412">Claude API</text>
+
+      <!-- 레인 라인 -->
+      <line x1="210" y1="58" x2="210" y2="630" stroke="#cbd5e1" stroke-dasharray="2 4"/>
+      <line x1="600" y1="58" x2="600" y2="630" stroke="#cbd5e1" stroke-dasharray="2 4"/>
+      <line x1="990" y1="58" x2="990" y2="630" stroke="#cbd5e1" stroke-dasharray="2 4"/>
+
+      <!-- 스텝들 -->
+      <!-- 1: UMcpServer::Initialize -->
+      <rect x="60" y="75" width="300" height="44" rx="6" fill="#fff" stroke="#2b7fff"/>
+      <text x="210" y="93" text-anchor="middle" font-size="12" font-weight="700">① UMcpServer::Initialize()</text>
+      <text x="210" y="109" text-anchor="middle" font-size="10" fill="#475569">McpServer.cpp:13 — EditorSubsystem 시작</text>
+
+      <!-- 2: DiscoverTools -->
+      <rect x="60" y="130" width="300" height="44" rx="6" fill="#fff" stroke="#2b7fff"/>
+      <text x="210" y="148" text-anchor="middle" font-size="12" font-weight="700">② DiscoverTools()</text>
+      <text x="210" y="164" text-anchor="middle" font-size="10" fill="#475569">McpServer.cpp:293 — ToolDefinitions JSON 캐시</text>
+
+      <!-- 3: StartHttpServer -->
+      <rect x="60" y="185" width="300" height="44" rx="6" fill="#fff" stroke="#2b7fff"/>
+      <text x="210" y="203" text-anchor="middle" font-size="12" font-weight="700">③ StartHttpServer()</text>
+      <text x="210" y="219" text-anchor="middle" font-size="10" fill="#475569">McpServer.cpp:103 — :55559/mcp 바인딩</text>
+
+      <!-- 4: StartServer (Frontend exec) -->
+      <rect x="60" y="240" width="300" height="44" rx="6" fill="#fff" stroke="#2b7fff"/>
+      <text x="210" y="258" text-anchor="middle" font-size="12" font-weight="700">④ StartServer() — Frontend.exe 기동</text>
+      <text x="210" y="274" text-anchor="middle" font-size="10" fill="#475569">McpServer.cpp:49 — CreateProc</text>
+      <line x1="360" y1="262" x2="450" y2="262" stroke="#374151" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- 5: Program.cs 기동 -->
+      <rect x="450" y="240" width="300" height="44" rx="6" fill="#fff" stroke="#8b5cf6"/>
+      <text x="600" y="258" text-anchor="middle" font-size="12" font-weight="700">⑤ Program.cs — Builder + DI 등록</text>
+      <text x="600" y="274" text-anchor="middle" font-size="10" fill="#475569">Program.cs:12 — Kestrel :55558</text>
+
+      <!-- 6: ToolRegistry.DiscoverTools -->
+      <rect x="450" y="295" width="300" height="44" rx="6" fill="#fff" stroke="#8b5cf6"/>
+      <text x="600" y="313" text-anchor="middle" font-size="12" font-weight="700">⑥ ToolRegistry.DiscoverTools()</text>
+      <text x="600" y="329" text-anchor="middle" font-size="10" fill="#475569">ToolRegistry.cs:54 — [AgentTool] 스캔</text>
+
+      <!-- 7: AuthConfig/ModelSettings Load -->
+      <rect x="450" y="350" width="300" height="44" rx="6" fill="#fff" stroke="#8b5cf6"/>
+      <text x="600" y="368" text-anchor="middle" font-size="12" font-weight="700">⑦ AuthConfig.Load + ModelSettings.Load</text>
+      <text x="600" y="384" text-anchor="middle" font-size="10" fill="#475569">Program.cs:60-61 — API 키 · 모델 설정</text>
+
+      <!-- 8: McpConfig.Load + new McpClient -->
+      <rect x="450" y="405" width="300" height="44" rx="6" fill="#fff" stroke="#8b5cf6"/>
+      <text x="600" y="423" text-anchor="middle" font-size="12" font-weight="700">⑧ McpConfig.Load → new McpClient(URL)</text>
+      <text x="600" y="439" text-anchor="middle" font-size="10" fill="#475569">McpConfig.cs:20 · Program.cs:74-77</text>
+
+      <!-- 9: initialize (Backend→UE) -->
+      <line x1="450" y1="470" x2="370" y2="470" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arrMcp)"/>
+      <text x="410" y="463" text-anchor="middle" font-size="10" fill="#16a34a" font-weight="700">initialize</text>
+      <rect x="60" y="460" width="300" height="22" rx="4" fill="#fff" stroke="#2b7fff"/>
+      <text x="210" y="475" text-anchor="middle" font-size="11">⑨ HandleInitialize (McpServer.cpp:185)</text>
+
+      <!-- 10: tools/list -->
+      <line x1="450" y1="505" x2="370" y2="505" stroke="#16a34a" stroke-width="1.8" marker-end="url(#arrMcp)"/>
+      <text x="410" y="498" text-anchor="middle" font-size="10" fill="#16a34a" font-weight="700">tools/list</text>
+      <rect x="60" y="495" width="300" height="22" rx="4" fill="#fff" stroke="#2b7fff"/>
+      <text x="210" y="510" text-anchor="middle" font-size="11">⑩ HandleToolsList — ToolDefinitions 반환</text>
+      <line x1="360" y1="520" x2="450" y2="520" stroke="#16a34a" stroke-width="1.8" stroke-dasharray="3 3" marker-end="url(#arrMcp)"/>
+
+      <!-- 11: RegisterMcpTools -->
+      <rect x="450" y="540" width="300" height="44" rx="6" fill="#fff" stroke="#8b5cf6"/>
+      <text x="600" y="558" text-anchor="middle" font-size="12" font-weight="700">⑪ RegisterMcpTools()</text>
+      <text x="600" y="574" text-anchor="middle" font-size="10" fill="#475569">ToolRegistry.cs:91 — mcp__unreal__* 등록</text>
+
+      <!-- 12: App.Run -->
+      <rect x="450" y="595" width="300" height="34" rx="6" fill="#fff" stroke="#8b5cf6"/>
+      <text x="600" y="617" text-anchor="middle" font-size="12" font-weight="700">⑫ App.Run() — 사용자 입력 대기</text>
+    </svg>
+  </div>
+</section>
+
+<!-- ========== 탭 ② 툴 등록 ========== -->
+<section id="register">
+  <h2>② 툴 등록 흐름 — 두 경로, 하나의 목적지</h2>
+
+  <div class="card">
+    <h3>핵심 원리</h3>
+    <p>Backend의 <code>ToolRegistry.Tools</code> 딕셔너리에는 두 종류의 도구가 <b>동일한 모양으로</b> 들어간다:
+    <code>(name, IAgentTool instance, InputSchema)</code>. 호출자 입장에서는 구분 없이 이름만 보고 실행하며,
+    실제 구현은 다형성으로 분기된다.</p>
+  </div>
+
+  <div class="grid2">
+    <!-- AgentTool 경로 -->
+    <div class="card cs">
+      <h3>🧩 경로 A — AgentTool (C# 내장)</h3>
+      <svg viewBox="0 0 420 440" role="img" aria-label="AgentTool 등록">
+        <defs>
+          <marker id="arrA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8b5cf6"/></marker>
+        </defs>
+        <rect x="40" y="10" width="340" height="50" rx="8" fill="#fff" stroke="#8b5cf6"/>
+        <text x="210" y="32" text-anchor="middle" font-size="12" font-weight="700">typeof(WebSearch).Assembly.GetTypes()</text>
+        <text x="210" y="48" text-anchor="middle" font-size="10" fill="#475569">ToolRegistry.cs:58</text>
+        <line x1="210" y1="60" x2="210" y2="78" stroke="#8b5cf6" marker-end="url(#arrA)"/>
+        <rect x="40" y="80" width="340" height="50" rx="8" fill="#fff" stroke="#8b5cf6"/>
+        <text x="210" y="102" text-anchor="middle" font-size="12" font-weight="700">[AgentTool] 어트리뷰트 필터</text>
+        <text x="210" y="118" text-anchor="middle" font-size="10" fill="#475569">GetCustomAttribute&lt;AgentToolAttribute&gt;()</text>
+        <line x1="210" y1="130" x2="210" y2="148" stroke="#8b5cf6" marker-end="url(#arrA)"/>
+        <rect x="40" y="150" width="340" height="50" rx="8" fill="#fff" stroke="#8b5cf6"/>
+        <text x="210" y="172" text-anchor="middle" font-size="12" font-weight="700">IAgentTool 구현 검사</text>
+        <text x="210" y="188" text-anchor="middle" font-size="10" fill="#475569">typeof(IAgentTool).IsAssignableFrom(T)</text>
+        <line x1="210" y1="200" x2="210" y2="218" stroke="#8b5cf6" marker-end="url(#arrA)"/>
+        <rect x="40" y="220" width="340" height="50" rx="8" fill="#fff" stroke="#8b5cf6"/>
+        <text x="210" y="242" text-anchor="middle" font-size="12" font-weight="700">ActivatorUtilities.CreateInstance(DI)</text>
+        <text x="210" y="258" text-anchor="middle" font-size="10" fill="#475569">싱글톤 인스턴스 1회 생성</text>
+        <line x1="210" y1="270" x2="210" y2="288" stroke="#8b5cf6" marker-end="url(#arrA)"/>
+        <rect x="40" y="290" width="340" height="50" rx="8" fill="#fff" stroke="#8b5cf6"/>
+        <text x="210" y="312" text-anchor="middle" font-size="12" font-weight="700">GenerateSchemaFromType(T)</text>
+        <text x="210" y="328" text-anchor="middle" font-size="10" fill="#475569">record TInput 리플렉션 → InputSchema</text>
+        <line x1="210" y1="340" x2="210" y2="358" stroke="#8b5cf6" marker-end="url(#arrA)"/>
+        <rect x="40" y="360" width="340" height="60" rx="8" fill="#f1ecff" stroke="#8b5cf6" stroke-width="2"/>
+        <text x="210" y="383" text-anchor="middle" font-size="12" font-weight="700">Tools[Attr.Name] = new ToolEntry(...)</text>
+        <text x="210" y="402" text-anchor="middle" font-size="10" fill="#475569">ToolRegistry.cs:82</text>
+      </svg>
+
+<pre><code>[AgentTool("web_fetch", "Fetch a URL")]
+public sealed class WebFetch : AgentTool&lt;WebFetch.Input&gt;
+{
+    public sealed record Input(
+        [property: JsonPropertyName("url")]
+        [property: Description("Target URL")]
+        string Url);
+
+    protected override Task&lt;ToolResult&gt; ExecuteAsync(
+        Input In, AgentSession S, CancellationToken Ct) { ... }
+}</code></pre>
+      <p class="note">스키마 생성은 <b>record 프로퍼티</b>의 <code>[JsonPropertyName]</code> + <code>[Description]</code> + nullable 판정으로 자동 수행.</p>
+    </div>
+
+    <!-- MCP Tool 경로 -->
+    <div class="card ue">
+      <h3>🧩 경로 B — MCP Tool (UE 원격)</h3>
+      <svg viewBox="0 0 420 480" role="img" aria-label="MCP Tool 등록">
+        <defs>
+          <marker id="arrB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2b7fff"/></marker>
+          <marker id="arrG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/></marker>
+        </defs>
+        <!-- 1단계: UE 측 선등록 -->
+        <text x="210" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a8a">── UE 측 선등록 ──</text>
+        <rect x="40" y="24" width="340" height="42" rx="8" fill="#fff" stroke="#2b7fff"/>
+        <text x="210" y="42" text-anchor="middle" font-size="12" font-weight="700">TObjectIterator&lt;UScriptStruct&gt;</text>
+        <text x="210" y="57" text-anchor="middle" font-size="10" fill="#475569">모든 USTRUCT 순회</text>
+        <line x1="210" y1="66" x2="210" y2="82" stroke="#2b7fff" marker-end="url(#arrB)"/>
+        <rect x="40" y="84" width="340" height="42" rx="8" fill="#fff" stroke="#2b7fff"/>
+        <text x="210" y="102" text-anchor="middle" font-size="12" font-weight="700">IsChildOf(FMcpTool) + McpTool 메타</text>
+        <text x="210" y="117" text-anchor="middle" font-size="10" fill="#475569">도구 이름 추출</text>
+        <line x1="210" y1="126" x2="210" y2="142" stroke="#2b7fff" marker-end="url(#arrB)"/>
+        <rect x="40" y="144" width="340" height="42" rx="8" fill="#fff" stroke="#2b7fff"/>
+        <text x="210" y="162" text-anchor="middle" font-size="12" font-weight="700">BuildInputSchema(UPROPERTY → Schema)</text>
+        <text x="210" y="177" text-anchor="middle" font-size="10" fill="#475569">McpServer.cpp:356</text>
+        <line x1="210" y1="186" x2="210" y2="202" stroke="#2b7fff" marker-end="url(#arrB)"/>
+        <rect x="40" y="204" width="340" height="42" rx="8" fill="#e8f1ff" stroke="#2b7fff" stroke-width="2"/>
+        <text x="210" y="222" text-anchor="middle" font-size="12" font-weight="700">ToolDefinitions[] JSON 캐시</text>
+        <text x="210" y="237" text-anchor="middle" font-size="10" fill="#475569">tools/list 응답에 재사용</text>
+
+        <!-- 2단계: Backend 동적 등록 -->
+        <text x="210" y="274" text-anchor="middle" font-size="11" font-weight="700" fill="#4c1d95">── Backend 동적 등록 ──</text>
+        <rect x="40" y="282" width="340" height="42" rx="8" fill="#fff" stroke="#8b5cf6"/>
+        <text x="210" y="300" text-anchor="middle" font-size="12" font-weight="700">McpClient.ListToolsAsync()</text>
+        <text x="210" y="315" text-anchor="middle" font-size="10" fill="#475569">POST /mcp method=tools/list</text>
+        <line x1="210" y1="324" x2="210" y2="340" stroke="#16a34a" marker-end="url(#arrG)"/>
+        <rect x="40" y="342" width="340" height="42" rx="8" fill="#fff" stroke="#8b5cf6"/>
+        <text x="210" y="360" text-anchor="middle" font-size="12" font-weight="700">RegisterMcpTools(Name, Client, List)</text>
+        <text x="210" y="375" text-anchor="middle" font-size="10" fill="#475569">ToolRegistry.cs:91</text>
+        <line x1="210" y1="384" x2="210" y2="400" stroke="#8b5cf6" marker-end="url(#arrA)"/>
+        <rect x="40" y="402" width="340" height="60" rx="8" fill="#f1ecff" stroke="#8b5cf6" stroke-width="2"/>
+        <text x="210" y="423" text-anchor="middle" font-size="12" font-weight="700">Tools["mcp__unreal__execute_python"]</text>
+        <text x="210" y="442" text-anchor="middle" font-size="10" fill="#475569">= new ToolEntry(McpProxyTool, Schema)</text>
+      </svg>
+
+<pre><code>USTRUCT(meta=(McpTool="execute_python"))
+struct FExecutePythonTool : public FMcpTool
+{
+    UPROPERTY(meta=(ToolParam="code", Required,
+                    Description="The Python code to execute"))
+    FString Code;
+
+    UPROPERTY(meta=(ToolParam="purpose", Required,
+                    Description="짧은 한국어 설명"))
+    FString Purpose;
+
+    virtual FString ToolDescription() const override { ... }
+    virtual FMcpResponse Execute() override;
+};</code></pre>
+      <p class="note">UE 자동 수집은 <b>리플렉션</b>이 전부. 새 도구 추가 시 어떤 레지스트리 코드도 고칠 필요가 없음.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>공통 목적지: Tools 딕셔너리</h3>
+    <svg viewBox="0 0 1000 230" role="img" aria-label="공통 목적지">
+      <defs>
+        <marker id="arrC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#374151"/></marker>
+      </defs>
+      <rect x="40" y="20" width="280" height="60" rx="8" fill="#f1ecff" stroke="#8b5cf6"/>
+      <text x="180" y="44" text-anchor="middle" font-size="13" font-weight="700">AgentTool (web_fetch)</text>
+      <text x="180" y="62" text-anchor="middle" font-size="11" fill="#475569">WebFetch 인스턴스 (IAgentTool)</text>
+
+      <rect x="40" y="100" width="280" height="60" rx="8" fill="#e8f1ff" stroke="#2b7fff"/>
+      <text x="180" y="124" text-anchor="middle" font-size="13" font-weight="700">MCP Tool (mcp__unreal__execute_python)</text>
+      <text x="180" y="142" text-anchor="middle" font-size="11" fill="#475569">McpProxyTool 인스턴스 (IAgentTool)</text>
+
+      <line x1="320" y1="50" x2="420" y2="100" stroke="#374151" stroke-width="1.5" marker-end="url(#arrC)"/>
+      <line x1="320" y1="130" x2="420" y2="120" stroke="#374151" stroke-width="1.5" marker-end="url(#arrC)"/>
+
+      <rect x="420" y="80" width="300" height="80" rx="10" fill="#fff" stroke="#1f2937" stroke-width="2"/>
+      <text x="570" y="106" text-anchor="middle" font-size="14" font-weight="700">Tools (Dictionary)</text>
+      <text x="570" y="128" text-anchor="middle" font-size="11" fill="#475569">key: 도구 이름 → ToolEntry(IAgentTool, Schema)</text>
+      <text x="570" y="148" text-anchor="middle" font-size="11" fill="#475569">ToolRegistry.cs:27</text>
+
+      <line x1="720" y1="120" x2="820" y2="120" stroke="#374151" stroke-width="1.5" marker-end="url(#arrC)"/>
+
+      <rect x="820" y="80" width="160" height="80" rx="10" fill="#ffeede" stroke="#f97316" stroke-width="2"/>
+      <text x="900" y="106" text-anchor="middle" font-size="13" font-weight="700">Claude API</text>
+      <text x="900" y="126" text-anchor="middle" font-size="10" fill="#475569">tools[] 배열로</text>
+      <text x="900" y="142" text-anchor="middle" font-size="10" fill="#475569">GetAllSchemas() 전달</text>
+    </svg>
+    <p class="note">실행 시점에는 <code>Tools[name].Tool.ExecuteAsync(...)</code> 한 줄로 호출. <b>다형성 덕분에 AgentTool/McpProxyTool 분기를 신경쓰지 않음</b>.</p>
+  </div>
+
+  <div class="card">
+    <h3>실제 JSON 예시</h3>
+    <details>
+      <summary>UE가 반환하는 tools/list 응답</summary>
+<pre><code>{
+  "jsonrpc": "2.0", "id": 2,
+  "result": {
+    "tools": [
+      {
+        "name": "execute_python",
+        "description": "Execute Python code in Unreal Editor.\n...",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "code":    { "type": "string", "description": "The Python code..." },
+            "purpose": { "type": "string", "description": "짧은 한국어 설명" }
+          },
+          "required": ["code", "purpose"]
+        }
+      }
+    ]
+  }
+}</code></pre>
+    </details>
+    <details>
+      <summary>Claude API로 전송되는 tools 배열</summary>
+<pre><code>{
+  "model": "claude-opus-4-5",
+  "tools": [
+    { "name": "web_fetch",
+      "description": "Fetch a URL",
+      "input_schema": { "type":"object", "properties":{...}, "required":[...] } },
+    { "name": "mcp__unreal__execute_python",
+      "description": "Execute Python code in Unreal Editor.\n...",
+      "input_schema": { "type":"object", "properties":{...}, "required":[...] } }
+  ],
+  "messages": [...]
+}</code></pre>
+    </details>
+  </div>
+</section>
+
+<!-- ========== 탭 ③ 메시지 흐름 ========== -->
+<section id="flow">
+  <h2>③ 사용자 메시지 처리 흐름</h2>
+  <p class="note">사용자가 채팅창에 입력 → Claude가 도구 호출 → UE에서 Python 실행 → 결과 반환 → 최종 답변까지. 각 단계에서 실제 어떤 JSON이 흐르는지 전부 수록.</p>
+
+  <div class="card">
+    <h3>전제: 사용되는 3가지 메시지 프로토콜</h3>
+    <div class="grid2">
+      <div>
+        <h4 style="margin:0 0 8px;color:var(--mcp)">🟢 MCP = JSON-RPC 2.0 (Backend ↔ UE)</h4>
+        <p class="note" style="margin-top:0">모든 요청/응답이 공통 봉투(envelope)를 씀. 메서드는 3개만 사용: <code>initialize</code>, <code>tools/list</code>, <code>tools/call</code>.</p>
+<pre><code>// 요청 봉투
+{
+  "jsonrpc": "2.0",    // 프로토콜 버전 (항상 "2.0")
+  "id": &lt;int&gt;,          // 요청-응답 매칭용 ID
+  "method": &lt;string&gt;,   // 호출할 메서드 이름
+  "params": { ... }     // 메서드 파라미터 (객체/배열)
+}
+
+// 성공 응답
+{
+  "jsonrpc": "2.0",
+  "id": &lt;int&gt;,          // 요청 id와 동일
+  "result": { ... }     // 메서드별 결과
+}
+
+// 에러 응답
+{
+  "jsonrpc": "2.0",
+  "id": &lt;int&gt;,
+  "error": {
+    "code": -32601,     // 표준 에러 코드
+    "message": "Method not found"
+  }
+}</code></pre>
+        <p class="note"><b>표준 에러 코드:</b> <code>-32700</code> Parse error · <code>-32600</code> Invalid Request · <code>-32601</code> Method not found · <code>-32602</code> Invalid params · <code>-32603</code> Internal error</p>
+      </div>
+      <div>
+        <h4 style="margin:0 0 8px;color:var(--api)">🟠 Claude Messages API (Backend ↔ Claude)</h4>
+        <p class="note" style="margin-top:0">HTTPS + SSE 스트리밍. <code>content</code>는 여러 블록의 배열 — <code>text</code>, <code>thinking</code>, <code>tool_use</code>, <code>tool_result</code>.</p>
+<pre><code>// 요청
+POST /v1/messages
+{
+  "model": "claude-opus-4-5",
+  "max_tokens": 8192,
+  "system": "...",
+  "tools": [ ... ],     // input_schema 포함
+  "messages": [ ... ],  // role + content 블록 배열
+  "stream": true
+}
+
+// 스트림 이벤트 (SSE)
+event: message_start
+event: content_block_start   // block index + type
+event: content_block_delta   // 부분 텍스트/도구 인자
+event: content_block_stop
+event: message_delta         // stop_reason 등
+event: message_stop</code></pre>
+        <p class="note"><b>stop_reason:</b> <code>end_turn</code>(정상 종료) · <code>tool_use</code>(도구 호출 필요) · <code>max_tokens</code> · <code>pause_turn</code>(잘림, 이어쓰기)</p>
+      </div>
+    </div>
+    <h4 style="margin:18px 0 8px;color:var(--cs)">🟣 Backend 내부 이벤트 (AgentLoop ↔ UI)</h4>
+    <p class="note" style="margin-top:0">Claude 스트림 이벤트를 <code>ApiStreamSpan</code>이 파싱하여 UI에 최적화된 <code>ChatEvent</code>로 재방출.</p>
+<pre><code>abstract record ChatEvent
+{
+    record User(string Text);               // 사용자 입력 에코
+    record Assistant(string TextDelta);     // 텍스트 델타 (실시간 스트리밍)
+    record Thinking(string Delta);          // 확장 사고 델타
+    record ToolStart(string Id, string Name, string InputJson);
+    record ToolEnd(string Id, ToolResult Result);
+    record System(string Message);          // 시스템 알림
+    record Done();                          // 턴 종료
+}</code></pre>
+  </div>
+
+  <div class="card">
+    <h3>시퀀스 다이어그램</h3>
+    <svg viewBox="0 0 1200 880" role="img" aria-label="메시지 흐름">
+      <defs>
+        <marker id="arrF" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#374151"/></marker>
+        <marker id="arrFg" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#16a34a"/></marker>
+        <marker id="arrFo" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f97316"/></marker>
+      </defs>
+      <!-- 레인 헤더 -->
+      <g font-size="11" font-weight="700">
+        <rect x="20" y="20" width="190" height="30" fill="#f1ecff" stroke="#8b5cf6"/>
+        <text x="115" y="40" text-anchor="middle" fill="#4c1d95">Razor UI</text>
+        <rect x="230" y="20" width="190" height="30" fill="#f1ecff" stroke="#8b5cf6"/>
+        <text x="325" y="40" text-anchor="middle" fill="#4c1d95">AgentRunner</text>
+        <rect x="440" y="20" width="190" height="30" fill="#f1ecff" stroke="#8b5cf6"/>
+        <text x="535" y="40" text-anchor="middle" fill="#4c1d95">AgentLoop</text>
+        <rect x="650" y="20" width="190" height="30" fill="#f1ecff" stroke="#8b5cf6"/>
+        <text x="745" y="40" text-anchor="middle" fill="#4c1d95">ToolRegistry / Proxy</text>
+        <rect x="860" y="20" width="160" height="30" fill="#e8f1ff" stroke="#2b7fff"/>
+        <text x="940" y="40" text-anchor="middle" fill="#1e3a8a">UE MCP Server</text>
+        <rect x="1040" y="20" width="140" height="30" fill="#ffeede" stroke="#f97316"/>
+        <text x="1110" y="40" text-anchor="middle" fill="#9a3412">Claude API</text>
+      </g>
+      <!-- 레인 라인 -->
+      <g stroke="#cbd5e1" stroke-dasharray="2 4">
+        <line x1="115" y1="55" x2="115" y2="860"/>
+        <line x1="325" y1="55" x2="325" y2="860"/>
+        <line x1="535" y1="55" x2="535" y2="860"/>
+        <line x1="745" y1="55" x2="745" y2="860"/>
+        <line x1="940" y1="55" x2="940" y2="860"/>
+        <line x1="1110" y1="55" x2="1110" y2="860"/>
+      </g>
+
+      <!-- 스텝 렌더링 헬퍼: y, from, to 순 -->
+      <!-- 1: UI → AgentRunner -->
+      <line x1="115" y1="80" x2="320" y2="80" stroke="#374151" stroke-width="1.5" marker-end="url(#arrF)"/>
+      <text x="220" y="73" text-anchor="middle" font-size="11" font-weight="700">① EnqueueMessage(UserInput)</text>
+      <text x="220" y="92" text-anchor="middle" font-size="10" fill="#475569">AgentRunner.cs:29 · Signal.Release()</text>
+
+      <!-- 2: Runner drains queue -->
+      <rect x="235" y="108" width="180" height="34" rx="4" fill="#fff" stroke="#8b5cf6"/>
+      <text x="325" y="122" text-anchor="middle" font-size="11" font-weight="700">② DrainQueue + ProcessMessage</text>
+      <text x="325" y="136" text-anchor="middle" font-size="10" fill="#475569">AgentRunner.cs:38-53</text>
+
+      <!-- 3: Runner → AgentLoop -->
+      <line x1="325" y1="158" x2="530" y2="158" stroke="#374151" stroke-width="1.5" marker-end="url(#arrF)"/>
+      <text x="425" y="151" text-anchor="middle" font-size="11" font-weight="700">③ AgentLoop.RunAsync(Input, Session)</text>
+      <text x="425" y="170" text-anchor="middle" font-size="10" fill="#475569">AgentLoop.cs:22</text>
+
+      <!-- 4: AddMessageSpan -->
+      <rect x="445" y="186" width="180" height="34" rx="4" fill="#fff" stroke="#8b5cf6"/>
+      <text x="535" y="200" text-anchor="middle" font-size="11" font-weight="700">④ Conversation.AddMessageSpan</text>
+      <text x="535" y="214" text-anchor="middle" font-size="10" fill="#475569">AgentLoop.cs:25</text>
+
+      <!-- 5: PromptBuilder.Build -->
+      <rect x="445" y="234" width="180" height="34" rx="4" fill="#fff" stroke="#8b5cf6"/>
+      <text x="535" y="248" text-anchor="middle" font-size="11" font-weight="700">⑤ [while] PromptBuilder.Build</text>
+      <text x="535" y="262" text-anchor="middle" font-size="10" fill="#475569">system + messages + tools[]</text>
+
+      <!-- 6: AgentLoop → Claude -->
+      <line x1="535" y1="286" x2="1105" y2="286" stroke="#f97316" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arrFo)"/>
+      <text x="820" y="279" text-anchor="middle" font-size="11" font-weight="700">⑥ Messages.CreateStreaming (HTTPS)</text>
+      <text x="820" y="298" text-anchor="middle" font-size="10" fill="#f97316">AgentLoop.cs:35</text>
+
+      <!-- 7: Claude → AgentLoop stream events -->
+      <line x1="1105" y1="318" x2="540" y2="318" stroke="#f97316" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arrFo)"/>
+      <text x="820" y="311" text-anchor="middle" font-size="11" font-weight="700">⑦ stream events (tool_use 포함)</text>
+      <text x="820" y="330" text-anchor="middle" font-size="10" fill="#f97316">ApiStreamSpan.Process</text>
+
+      <!-- 8: Complete 분기 -->
+      <rect x="445" y="346" width="180" height="34" rx="4" fill="#fff" stroke="#8b5cf6"/>
+      <text x="535" y="360" text-anchor="middle" font-size="11" font-weight="700">⑧ Complete() → 3분기</text>
+      <text x="535" y="374" text-anchor="middle" font-size="10" fill="#475569">EndSpan · ExecuteTools · Continue</text>
+
+      <!-- 9: AgentLoop → ToolRegistry -->
+      <line x1="535" y1="396" x2="740" y2="396" stroke="#374151" stroke-width="1.5" marker-end="url(#arrF)"/>
+      <text x="637" y="389" text-anchor="middle" font-size="11" font-weight="700">⑨ ToolExecutor.ExecuteAsync(ToolUse)</text>
+      <text x="637" y="408" text-anchor="middle" font-size="10" fill="#475569">ToolExecutor.cs:19</text>
+
+      <!-- 10: Registry → Proxy dispatch -->
+      <rect x="655" y="424" width="180" height="34" rx="4" fill="#fff" stroke="#8b5cf6"/>
+      <text x="745" y="438" text-anchor="middle" font-size="11" font-weight="700">⑩ Tools[name] = McpProxyTool</text>
+      <text x="745" y="452" text-anchor="middle" font-size="10" fill="#475569">ToolRegistry.cs:35 · 다형성 분기</text>
+
+      <!-- 11: Proxy → UE via HTTP -->
+      <line x1="745" y1="476" x2="935" y2="476" stroke="#16a34a" stroke-width="2" marker-end="url(#arrFg)"/>
+      <text x="840" y="469" text-anchor="middle" font-size="11" font-weight="700">⑪ POST /mcp tools/call</text>
+      <text x="840" y="488" text-anchor="middle" font-size="10" fill="#16a34a">McpClient.cs:104 (Http.PostAsync)</text>
+
+      <!-- 12: UE HandleToolsCall -->
+      <rect x="855" y="500" width="170" height="34" rx="4" fill="#fff" stroke="#2b7fff"/>
+      <text x="940" y="514" text-anchor="middle" font-size="11" font-weight="700">⑫ HandleToolsCall</text>
+      <text x="940" y="528" text-anchor="middle" font-size="10" fill="#475569">McpServer.cpp:215</text>
+
+      <!-- 13: PopulateToolParams -->
+      <rect x="855" y="540" width="170" height="34" rx="4" fill="#fff" stroke="#2b7fff"/>
+      <text x="940" y="554" text-anchor="middle" font-size="11" font-weight="700">⑬ PopulateToolParams (리플렉션)</text>
+      <text x="940" y="568" text-anchor="middle" font-size="10" fill="#475569">McpServer.cpp:456</text>
+
+      <!-- 14: Execute Python -->
+      <rect x="855" y="580" width="170" height="34" rx="4" fill="#fff" stroke="#2b7fff"/>
+      <text x="940" y="594" text-anchor="middle" font-size="11" font-weight="700">⑭ FMcpTool::Execute()</text>
+      <text x="940" y="608" text-anchor="middle" font-size="10" fill="#475569">Python + Transaction</text>
+
+      <!-- 15: UE → Proxy 응답 -->
+      <line x1="935" y1="636" x2="750" y2="636" stroke="#16a34a" stroke-width="2" stroke-dasharray="3 3" marker-end="url(#arrFg)"/>
+      <text x="840" y="629" text-anchor="middle" font-size="11" font-weight="700">⑮ {content, isError}</text>
+
+      <!-- 16: Proxy → ToolResult -->
+      <rect x="655" y="656" width="180" height="34" rx="4" fill="#fff" stroke="#8b5cf6"/>
+      <text x="745" y="670" text-anchor="middle" font-size="11" font-weight="700">⑯ ToolResult.Success/Error</text>
+      <text x="745" y="684" text-anchor="middle" font-size="10" fill="#475569">AssistantSpan.ToolExecutions 기록</text>
+
+      <!-- 17: Loop re-enters Claude -->
+      <line x1="535" y1="712" x2="1105" y2="712" stroke="#f97316" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arrFo)"/>
+      <text x="820" y="705" text-anchor="middle" font-size="11" font-weight="700">⑰ [while 재진입] messages+=tool_result</text>
+
+      <!-- 18: Claude 최종 답변 → UI -->
+      <line x1="1105" y1="742" x2="120" y2="742" stroke="#f97316" stroke-width="1.8" stroke-dasharray="6 3" marker-end="url(#arrFo)"/>
+      <text x="600" y="735" text-anchor="middle" font-size="11" font-weight="700">⑱ 최종 답변 스트리밍 → ChatEvent.Done</text>
+      <text x="600" y="755" text-anchor="middle" font-size="10" fill="#f97316">stop_reason=end_turn</text>
+
+      <!-- UI 업데이트 루프 -->
+      <rect x="25" y="778" width="180" height="34" rx="4" fill="#fff" stroke="#8b5cf6"/>
+      <text x="115" y="792" text-anchor="middle" font-size="11" font-weight="700">ChatStore.Process(Evt)</text>
+      <text x="115" y="806" text-anchor="middle" font-size="10" fill="#475569">실시간 Blazor 렌더</text>
+
+      <!-- 클릭 오버레이: 각 스텝 영역을 투명 rect로 덮어 아래 상세 섹션으로 스크롤 -->
+      <g>
+        <a href="#step-1"><rect class="hit" x="100" y="62" width="230" height="42" fill="transparent"><title>① 상세 보기</title></rect></a>
+        <a href="#step-2"><rect class="hit" x="235" y="106" width="180" height="40" fill="transparent"><title>② 상세 보기</title></rect></a>
+        <a href="#step-3"><rect class="hit" x="320" y="140" width="220" height="42" fill="transparent"><title>③ 상세 보기</title></rect></a>
+        <a href="#step-4"><rect class="hit" x="445" y="184" width="180" height="40" fill="transparent"><title>④ 상세 보기</title></rect></a>
+        <a href="#step-5"><rect class="hit" x="445" y="232" width="180" height="40" fill="transparent"><title>⑤ 상세 보기</title></rect></a>
+        <a href="#step-6"><rect class="hit" x="535" y="272" width="580" height="30" fill="transparent"><title>⑥ 상세 보기</title></rect></a>
+        <a href="#step-6"><rect class="hit" x="535" y="304" width="580" height="32" fill="transparent"><title>⑦ 상세 보기</title></rect></a>
+        <a href="#step-8"><rect class="hit" x="445" y="344" width="180" height="40" fill="transparent"><title>⑧ 상세 보기</title></rect></a>
+        <a href="#step-9"><rect class="hit" x="535" y="384" width="210" height="28" fill="transparent"><title>⑨ 상세 보기</title></rect></a>
+        <a href="#step-9"><rect class="hit" x="655" y="422" width="180" height="40" fill="transparent"><title>⑩ 상세 보기</title></rect></a>
+        <a href="#step-11"><rect class="hit" x="745" y="462" width="200" height="34" fill="transparent"><title>⑪ 상세 보기</title></rect></a>
+        <a href="#step-12"><rect class="hit" x="855" y="498" width="170" height="40" fill="transparent"><title>⑫ 상세 보기</title></rect></a>
+        <a href="#step-12"><rect class="hit" x="855" y="538" width="170" height="40" fill="transparent"><title>⑬ 상세 보기</title></rect></a>
+        <a href="#step-12"><rect class="hit" x="855" y="578" width="170" height="40" fill="transparent"><title>⑭ 상세 보기</title></rect></a>
+        <a href="#step-15"><rect class="hit" x="750" y="622" width="200" height="30" fill="transparent"><title>⑮ 상세 보기</title></rect></a>
+        <a href="#step-15"><rect class="hit" x="655" y="654" width="180" height="40" fill="transparent"><title>⑯ 상세 보기</title></rect></a>
+        <a href="#step-17"><rect class="hit" x="535" y="702" width="580" height="28" fill="transparent"><title>⑰ 상세 보기</title></rect></a>
+        <a href="#step-18"><rect class="hit" x="120" y="732" width="990" height="28" fill="transparent"><title>⑱ 상세 보기</title></rect></a>
+      </g>
+    </svg>
+    <p class="note" style="margin-top:10px">💡 <b>다이어그램의 박스/화살표를 클릭</b>하면 아래 해당 단계의 상세 설명으로 이동합니다.</p>
+  </div>
+
+  <div class="card">
+    <h3>단계별 상세 + JSON 스냅샷</h3>
+
+    <div class="step" id="step-1">
+      <div class="n">1</div>
+      <div class="body">
+        <h4>사용자 입력 수신 <span class="pill cs">Razor UI</span></h4>
+        <div class="meta">Chat.razor · AgentRunner.EnqueueMessage (AgentRunner.cs:29)</div>
+        <p>ChatInput 컴포넌트의 <code>OnSend</code> 이벤트에서 <code>UserInput</code> 객체를 만들어 <code>ConcurrentQueue</code>에 적재하고 <code>SemaphoreSlim.Release()</code>로 백그라운드 워커를 깨운다.</p>
+        <details>
+          <summary>UserInput 구조 (Backend 내부 객체)</summary>
+<pre><code>public sealed record UserInput(
+    string Text,              // 사용자가 입력한 원문
+    DateTime Timestamp,
+    List&lt;Attachment&gt;? Files); // 첨부 파일(있으면)
+
+// 실제 큐에 들어가는 값 예시
+new UserInput(
+    Text: "큐브 스폰해줘",
+    Timestamp: 2026-04-23T10:15:23Z,
+    Files: null);</code></pre>
+        </details>
+      </div>
+    </div>
+
+    <div class="step" id="step-2">
+      <div class="n">2</div>
+      <div class="body">
+        <h4>큐 드레인 <span class="pill cs">AgentRunner (HostedService)</span></h4>
+        <div class="meta">AgentRunner.ExecuteAsync (AgentRunner.cs:38)</div>
+        <p><code>while (!stoppingToken) await Signal.WaitAsync()</code>로 대기하다가 큐의 모든 메시지를 순차 처리. 동시성은 큐 드레인 1개로 제한되어 레이스 없음.</p>
+      </div>
+    </div>
+
+    <div class="step" id="step-3">
+      <div class="n">3</div>
+      <div class="body">
+        <h4>AgentLoop 시작 <span class="pill cs">AgentLoop</span></h4>
+        <div class="meta">AgentLoop.RunAsync (AgentLoop.cs:22)</div>
+        <p><code>IAsyncEnumerable&lt;ChatEvent&gt;</code> 반환. 내부에서 <code>while(true)</code> 루프를 돌리며 도구 호출이 반복될 수 있음.</p>
+      </div>
+    </div>
+
+    <div class="step" id="step-4">
+      <div class="n">4</div>
+      <div class="body">
+        <h4>대화 히스토리에 추가</h4>
+        <div class="meta">Conversation.AddMessageSpan (AgentLoop.cs:25)</div>
+        <p>사용자 입력 하나당 <code>MessageSpan</code> 1개. 그 안에 Claude 응답 1회가 곧 <code>AssistantSpan</code>.</p>
+      </div>
+    </div>
+
+    <div class="step" id="step-5">
+      <div class="n">5</div>
+      <div class="body">
+        <h4>프롬프트 조립 <span class="pill cs">PromptBuilder</span></h4>
+        <div class="meta">PromptBuilder.Build (AgentLoop.cs:31)</div>
+        <p><code>MessageCreateParams</code> 생성: system prompt 6개 섹션 + <code>Conversation.ToAnthropicMessages()</code> + <code>ToolRegistry.GetAllSchemas()</code>. CacheControl=Ephemeral 적용.</p>
+      </div>
+    </div>
+
+    <div class="step" id="step-6">
+      <div class="n">6~7</div>
+      <div class="body">
+        <h4>Claude 스트리밍 호출 <span class="pill api">Claude API</span></h4>
+        <div class="meta">Auth.Client.Messages.CreateStreaming (AgentLoop.cs:35) · ApiStreamSpan.Process</div>
+        <p>HTTPS로 <code>POST /v1/messages</code>. 스트림 이벤트마다 <code>ChatEvent.Assistant / Thinking / ToolStart</code>가 즉시 yield되어 UI에 실시간 전달.</p>
+        <details>
+          <summary>Claude 요청 전체 페이로드 (실제 전송)</summary>
+<pre><code>POST https://api.anthropic.com/v1/messages
+Authorization: Bearer sk-ant-...
+Content-Type: application/json
+anthropic-version: 2023-06-01
+
+{
+  "model": "claude-opus-4-5",
+  "max_tokens": 8192,
+  "stream": true,
+  "system": [
+    {
+      "type": "text",
+      "text": "You are Unreal Agent...",
+      "cache_control": {"type": "ephemeral"}
+    }
+  ],
+  "tools": [
+    {
+      "name": "web_fetch",
+      "description": "Fetch a URL and return its content",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "url": {"type":"string","description":"Target URL"}
+        },
+        "required": ["url"]
+      }
+    },
+    {
+      "name": "mcp__unreal__execute_python",
+      "description": "Execute Python code in Unreal Editor.\n...",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "code":    {"type":"string","description":"The Python code to execute"},
+          "purpose": {"type":"string","description":"짧은 한국어 설명"}
+        },
+        "required": ["code","purpose"]
+      }
+    }
+  ],
+  "messages": [
+    { "role": "user", "content": "큐브 스폰해줘" }
+  ]
+}</code></pre>
+        </details>
+        <details>
+          <summary>SSE 스트림 이벤트 타임라인 (실제 수신 순서)</summary>
+<pre><code>event: message_start
+data: {"type":"message_start","message":{"id":"msg_01X","role":"assistant","content":[],"model":"...","stop_reason":null,"usage":{"input_tokens":245,"output_tokens":1}}}
+
+event: content_block_start
+data: {"type":"content_block_start","index":0,"content_block":{"type":"text","text":""}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"큐브를 "}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"스폰하는 "}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"Python을 실행할게요."}}
+
+event: content_block_stop
+data: {"type":"content_block_stop","index":0}
+
+event: content_block_start
+data: {"type":"content_block_start","index":1,"content_block":{"type":"tool_use","id":"toolu_01ABC","name":"mcp__unreal__execute_python","input":{}}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":1,"delta":{"type":"input_json_delta","partial_json":"{\"code\":\"import unreal\\n"}}
+
+event: content_block_delta
+data: {"type":"content_block_delta","index":1,"delta":{"type":"input_json_delta","partial_json":"...\",\"purpose\":\"원점에 ..\"}"}}
+
+event: content_block_stop
+data: {"type":"content_block_stop","index":1}
+
+event: message_delta
+data: {"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"output_tokens":187}}
+
+event: message_stop
+data: {"type":"message_stop"}</code></pre>
+        </details>
+        <details>
+          <summary>파싱 완료 시점의 AssistantSpan (Backend 내부)</summary>
+<pre><code>AssistantSpan {
+  Id = "msg_01X",
+  Blocks = [
+    Block.Text { Text = "큐브를 스폰하는 Python을 실행할게요." },
+    Block.ToolUse {
+      Id = "toolu_01ABC",
+      Name = "mcp__unreal__execute_python",
+      InputJson = "{\"code\":\"import unreal\\n...\",\"purpose\":\"원점에...\"}"
+    }
+  ],
+  StopReason = "tool_use",
+  Usage = { InputTokens = 245, OutputTokens = 187 }
+}</code></pre>
+        </details>
+      </div>
+    </div>
+
+    <div class="step" id="step-8">
+      <div class="n">8</div>
+      <div class="body">
+        <h4>Complete() 3분기</h4>
+        <div class="meta">ApiStreamSpan.Complete</div>
+        <p><code>EndSpan</code>(정상 종료) / <code>ExecuteTools</code>(도구 호출 필요) / <code>Continue</code>(응답 잘림, 이어쓰기) 중 하나 반환. 이 분기 결과가 while 루프의 다음 행동을 결정.</p>
+      </div>
+    </div>
+
+    <div class="step" id="step-9">
+      <div class="n">9~10</div>
+      <div class="body">
+        <h4>도구 실행 디스패치 <span class="pill cs">ToolExecutor</span></h4>
+        <div class="meta">ToolRegistry.ExecuteAsync (ToolRegistry.cs:35)</div>
+        <p><code>Tools["mcp__unreal__execute_python"]</code> → <code>McpProxyTool</code> 인스턴스 반환 → <code>ExecuteAsync(inputJson)</code>. 같은 진입점이지만 내부 구현이 MCP 원격 호출.</p>
+      </div>
+    </div>
+
+    <div class="step" id="step-11">
+      <div class="n">11</div>
+      <div class="body">
+        <h4>HTTP POST 전송 <span class="pill mcp">MCP / JSON-RPC 2.0</span></h4>
+        <div class="meta">McpClient.SendAsync → Http.PostAsync (McpClient.cs:104)</div>
+        <p>URL은 <code>settings.local.json</code>에 적힌 <code>http://localhost:55559/mcp</code>. 프록시가 가진 <code>OriginalName</code>(=<code>execute_python</code>, <code>mcp__unreal__</code> 프리픽스 떼어낸 이름)이 전송됨.</p>
+        <details>
+          <summary>HTTP 요청 (헤더 + 봉투 전체)</summary>
+<pre><code>POST /mcp HTTP/1.1
+Host: localhost:55559
+Content-Type: application/json
+Content-Length: 312
+
+{
+  "jsonrpc": "2.0",
+  "id": 7,
+  "method": "tools/call",
+  "params": {
+    "name": "execute_python",
+    "arguments": {
+      "code": "import unreal\nunreal.EditorLevelLibrary.spawn_actor_from_class(unreal.StaticMeshActor, unreal.Vector(0,0,0))",
+      "purpose": "원점에 StaticMeshActor 스폰"
+    }
+  }
+}</code></pre>
+          <p class="note"><b>주목:</b> Content-Length 헤더 필수 (UE HTTP 서버는 chunked transfer를 받지 못하므로 <code>McpClient.cs:99-103</code>에서 <code>StringContent</code>로 명시적 직렬화).</p>
+        </details>
+        <details>
+          <summary>참고: 부팅 시점의 initialize / tools/list 페이로드</summary>
+<pre><code>// ① initialize (Backend → UE)
+{
+  "jsonrpc":"2.0", "id":1, "method":"initialize",
+  "params": {
+    "protocolVersion":"2025-03-26",
+    "clientInfo": {"name":"unreal-agent-backend"}
+  }
+}
+
+// ① initialize 응답 (UE → Backend)
+{
+  "jsonrpc":"2.0", "id":1,
+  "result": {
+    "protocolVersion":"2025-03-26",
+    "serverInfo": {"name":"unreal-agent","version":"1.0.0"},
+    "capabilities": {"tools": {}}   // 빈 객체 = "tools를 지원함"
+  }
+}
+
+// ② tools/list (Backend → UE)
+{"jsonrpc":"2.0", "id":2, "method":"tools/list", "params":{}}
+
+// ② tools/list 응답 (UE → Backend) — 등록된 모든 도구 반환
+{
+  "jsonrpc":"2.0", "id":2,
+  "result": {
+    "tools": [
+      {
+        "name":"execute_python",
+        "description":"Execute Python code in Unreal Editor.\n...",
+        "inputSchema": {
+          "type":"object",
+          "properties": {
+            "code":    {"type":"string","description":"..."},
+            "purpose": {"type":"string","description":"..."}
+          },
+          "required":["code","purpose"]
+        }
+      }
+    ]
+  }
+}</code></pre>
+        </details>
+      </div>
+    </div>
+
+    <div class="step" id="step-12">
+      <div class="n">12~14</div>
+      <div class="body">
+        <h4>UE 측 실행 <span class="pill ue">UMcpServer</span></h4>
+        <div class="meta">HandleToolsCall → ExecuteTool → PopulateToolParams → Execute (McpServer.cpp:215,426,456)</div>
+        <p><code>Malloc + InitializeStruct</code>로 빈 <code>FExecutePythonTool</code> 생성 → 리플렉션으로 <code>Code</code>/<code>Purpose</code> 필드에 JSON 인자 자동 바인딩 → <code>GEditor-&gt;BeginTransaction</code> → <code>IPythonScriptPlugin::ExecPythonCommandEx</code>. 실패 시 <code>CancelTransaction</code>으로 에디터 상태 롤백.</p>
+      </div>
+    </div>
+
+    <div class="step" id="step-15">
+      <div class="n">15~16</div>
+      <div class="body">
+        <h4>결과 역전달 — 3단계 변환</h4>
+        <div class="meta">FMcpResponse → MCP ToolCallResult → ToolResult</div>
+        <p>UE의 C++ 구조체가 MCP 규격 JSON으로, 그 다음 Backend의 C# 타입으로 두 번 변환됨.</p>
+        <details>
+          <summary>(a) UE 내부: FMcpResponse</summary>
+<pre><code>// 성공 케이스
+FMcpResponse {
+  bSuccess = true,
+  Result = "LogPython: Actor spawned at (0,0,0)",
+  Error = ""
+}
+
+// 실패 케이스
+FMcpResponse {
+  bSuccess = false,
+  Result = "",
+  Error = "NameError: name 'xxx' is not defined"
+}</code></pre>
+        </details>
+        <details>
+          <summary>(b) HTTP 응답 봉투 (JSON-RPC 2.0)</summary>
+<pre><code>HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "jsonrpc": "2.0",
+  "id": 7,                        // 요청과 동일한 ID
+  "result": {
+    "content": [                  // MCP 표준 content 배열
+      {
+        "type": "text",
+        "text": "LogPython: Actor spawned at (0,0,0)"
+      }
+    ],
+    "isError": false              // true면 tool_result에 is_error:true로 매핑
+  }
+}</code></pre>
+          <p class="note"><b>MCP 스펙:</b> <code>content</code>는 멀티모달 배열이라 <code>{type:"image", data:"base64..."}</code>, <code>{type:"resource", ...}</code>도 올 수 있음. 현재 UE 구현은 text만 반환.</p>
+        </details>
+        <details>
+          <summary>(c) Backend 내부: ToolResult (McpProxyTool 변환 후)</summary>
+<pre><code>public sealed record ToolResult
+{
+    public bool IsError { get; init; }
+    public string Text { get; init; }
+
+    public static ToolResult Success(string Text) => new() { IsError=false, Text=Text };
+    public static ToolResult Error(string Text)   => new() { IsError=true,  Text=Text };
+}
+
+// 예시 인스턴스
+ToolResult { IsError = false, Text = "LogPython: Actor spawned at (0,0,0)" }</code></pre>
+        </details>
+        <details>
+          <summary>(d) AssistantSpan.ToolExecutions에 기록</summary>
+<pre><code>AssistantSpan {
+  Id = "msg_01X",
+  Blocks = [ Text, ToolUse ],
+  ToolExecutions = [
+    new ToolExecution {
+      ToolUseId = "toolu_01ABC",
+      Name      = "mcp__unreal__execute_python",
+      Input     = "{\"code\":\"...\",\"purpose\":\"...\"}",
+      Result    = ToolResult.Success("LogPython: Actor spawned at (0,0,0)")
+    }
+  ]
+}
+
+// 동시에 UI로 이벤트 yield
+yield new ChatEvent.ToolEnd(
+    Id: "toolu_01ABC",
+    Result: ToolResult.Success("..."));</code></pre>
+        </details>
+      </div>
+    </div>
+
+    <div class="step" id="step-17">
+      <div class="n">17</div>
+      <div class="body">
+        <h4>while 루프 재진입 — tool_result 포함하여 재호출 <span class="pill api">Claude API</span></h4>
+        <div class="meta">PromptBuilder가 ToolExecutions를 tool_result 블록으로 변환 (Conversation.ToAnthropicMessages)</div>
+        <p>같은 <code>AgentLoop.RunAsync</code> 안에서 <code>while(true)</code>가 한 바퀴 더 돈다. 이번에는 messages 배열에 <b>assistant 턴 + user 턴 (tool_result 포함)</b>이 추가되어 있음.</p>
+        <details>
+          <summary>재호출 시 messages 전체 상태</summary>
+<pre><code>{
+  "model": "claude-opus-4-5",
+  "max_tokens": 8192,
+  "tools": [...],    // 동일
+  "messages": [
+    {
+      "role": "user",
+      "content": "큐브 스폰해줘"
+    },
+    {
+      "role": "assistant",
+      "content": [
+        {"type":"text","text":"큐브를 스폰하는 Python을 실행할게요."},
+        {
+          "type":"tool_use",
+          "id":"toolu_01ABC",
+          "name":"mcp__unreal__execute_python",
+          "input": {
+            "code":"import unreal\n...",
+            "purpose":"원점에 StaticMeshActor 스폰"
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "content": [
+        {
+          "type": "tool_result",
+          "tool_use_id": "toolu_01ABC",   // ← assistant의 tool_use id와 매칭
+          "content": "LogPython: Actor spawned at (0,0,0)",
+          "is_error": false
+        }
+      ]
+    }
+  ]
+}</code></pre>
+          <p class="note"><b>핵심 규칙:</b> Claude API는 <code>tool_use</code>와 <code>tool_result</code>를 <code>tool_use_id</code>로 쌍매칭. 도구가 여러 개 호출됐으면 tool_result도 여러 개를 같은 user 턴 <code>content</code> 배열에 담아야 함.</p>
+        </details>
+      </div>
+    </div>
+
+    <div class="step" id="step-18">
+      <div class="n">18</div>
+      <div class="body">
+        <h4>최종 응답 & UI 업데이트 <span class="pill cs">ChatStore</span></h4>
+        <div class="meta">stop_reason=end_turn → ChatEvent.Done</div>
+        <p>Claude가 도구 결과를 보고 최종 답변 생성. 이번 응답에는 <code>tool_use</code>가 없으므로 <code>stop_reason=end_turn</code>. <code>ApiStreamSpan.Complete()</code>가 <code>EndSpan</code>을 반환하고 while 루프 종료.</p>
+        <details>
+          <summary>마지막 Claude 응답 (스트림 종료 시점 조립본)</summary>
+<pre><code>{
+  "id": "msg_02Y",
+  "role": "assistant",
+  "content": [
+    {"type":"text","text":"큐브를 원점에 스폰했습니다. 에디터의 월드에서 StaticMeshActor를 확인하실 수 있어요."}
+  ],
+  "stop_reason": "end_turn",
+  "usage": { "input_tokens": 512, "output_tokens": 42 }
+}</code></pre>
+        </details>
+        <details>
+          <summary>UI로 yield되는 ChatEvent 시퀀스 (전체 턴)</summary>
+<pre><code>// 첫 API 호출
+ChatEvent.Assistant("큐브를 ")
+ChatEvent.Assistant("스폰하는 ")
+ChatEvent.Assistant("Python을 실행할게요.")
+ChatEvent.ToolStart("toolu_01ABC", "mcp__unreal__execute_python", "{\"code\":...}")
+// 도구 실행 중...
+ChatEvent.ToolEnd("toolu_01ABC", ToolResult.Success("LogPython: Actor spawned..."))
+
+// 재호출 (tool_result 포함)
+ChatEvent.Assistant("큐브를 ")
+ChatEvent.Assistant("원점에 ")
+ChatEvent.Assistant("스폰했습니다...")
+
+// 턴 종료
+ChatEvent.Done()</code></pre>
+        </details>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="n">★</div>
+      <div class="body">
+        <h4>정리: 한 턴에서 오가는 메시지 개수</h4>
+        <table style="margin-top:8px">
+          <thead><tr><th>구간</th><th>방향</th><th>프로토콜</th><th>메시지 수</th></tr></thead>
+          <tbody>
+            <tr><td>UI → Backend</td><td>단방향</td><td>Blazor SignalR</td><td>1 (UserInput)</td></tr>
+            <tr><td>Backend → Claude</td><td>양방향</td><td>HTTPS SSE</td><td>2 요청 · N 이벤트</td></tr>
+            <tr><td>Backend → UE</td><td>양방향</td><td>JSON-RPC 2.0 / HTTP</td><td>도구당 1쌍 (tools/call)</td></tr>
+            <tr><td>Backend → UI</td><td>스트리밍</td><td>Blazor SignalR</td><td>N (ChatEvent)</td></tr>
+          </tbody>
+        </table>
+        <p class="note">도구가 M번 연쇄 호출되면 Claude 요청 = <b>M+1</b>회, MCP tools/call = <b>M</b>회. 각 호출마다 messages 배열이 누적되어 커짐 → prompt caching(<code>cache_control:ephemeral</code>)으로 비용 절감.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 탭 ④ 레퍼런스 ========== -->
+<section id="ref">
+  <h2>④ 주요 클래스/함수 레퍼런스</h2>
+
+  <div class="card">
+    <h3>표 A — C++ (UE 측)</h3>
+    <table>
+      <thead><tr><th style="width:32%">심볼</th><th style="width:28%">경로 : 라인</th><th>역할</th></tr></thead>
+      <tbody>
+        <tr><td><code>UMcpServer::Initialize</code></td><td>Source/UnrealAgent/MCP/McpServer.cpp:13</td><td>부팅 진입 — DiscoverTools + HTTP + Backend 기동</td></tr>
+        <tr><td><code>UMcpServer::DiscoverTools</code></td><td>Source/UnrealAgent/MCP/McpServer.cpp:293</td><td>USTRUCT 리플렉션으로 FMcpTool 파생 자동 수집</td></tr>
+        <tr><td><code>UMcpServer::BuildInputSchema</code></td><td>Source/UnrealAgent/MCP/McpServer.cpp:356</td><td>UPROPERTY → JSON Schema 변환</td></tr>
+        <tr><td><code>UMcpServer::HandleMcpRequest</code></td><td>Source/UnrealAgent/MCP/McpServer.cpp:136</td><td>JSON-RPC 2.0 라우터 (initialize·tools/list·tools/call)</td></tr>
+        <tr><td><code>UMcpServer::HandleToolsList</code></td><td>Source/UnrealAgent/MCP/McpServer.cpp:206</td><td>사전 빌드된 ToolDefinitions 배열 반환</td></tr>
+        <tr><td><code>UMcpServer::HandleToolsCall</code></td><td>Source/UnrealAgent/MCP/McpServer.cpp:215</td><td>도구 실행 → MCP content 응답 래핑</td></tr>
+        <tr><td><code>UMcpServer::ExecuteTool</code></td><td>Source/UnrealAgent/MCP/McpServer.cpp:426</td><td>구조체 메모리 할당 + 실행 + 정리</td></tr>
+        <tr><td><code>UMcpServer::PopulateToolParams</code></td><td>Source/UnrealAgent/MCP/McpServer.cpp:456</td><td>JSON 인자 → UPROPERTY 자동 바인딩 (SetPropertyValue_InContainer)</td></tr>
+        <tr><td><code>FMcpTool</code> (USTRUCT)</td><td>Source/UnrealAgent/MCP/McpTypes.h:20</td><td>도구 베이스 구조체 — 상속해서 도구 정의</td></tr>
+        <tr><td><code>FExecutePythonTool</code></td><td>Source/UnrealAgent/Tools/ExecutePythonTool.h:26</td><td>Python 실행 도구 — ToolParam 메타 예시</td></tr>
+        <tr><td><code>FExecutePythonTool::Execute</code></td><td>Source/UnrealAgent/Tools/ExecutePythonTool.cpp:7</td><td>GEditor 트랜잭션 + Python 실행, 실패 시 롤백</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>표 B — C# (Backend 측)</h3>
+    <table>
+      <thead><tr><th style="width:32%">심볼</th><th style="width:28%">경로 : 라인</th><th>역할</th></tr></thead>
+      <tbody>
+        <tr><td><code>Program.cs</code> 엔트리</td><td>UnrealAgent.Frontend/Program.cs:12</td><td>Kestrel :55558 + DI 등록 + 도구/MCP 초기화 + App.Run</td></tr>
+        <tr><td><code>ToolRegistry.DiscoverTools</code></td><td>UnrealAgent.Backend/Tool/ToolRegistry.cs:54</td><td>[AgentTool] 어트리뷰트 스캔 + DI 인스턴스 생성</td></tr>
+        <tr><td><code>ToolRegistry.RegisterMcpTools</code></td><td>UnrealAgent.Backend/Tool/ToolRegistry.cs:91</td><td>MCP 도구를 프록시로 래핑하여 동적 등록</td></tr>
+        <tr><td><code>ToolRegistry.ExecuteAsync</code></td><td>UnrealAgent.Backend/Tool/ToolRegistry.cs:35</td><td>이름 기반 도구 실행 — 다형성 분기점</td></tr>
+        <tr><td><code>ToolRegistry.GenerateSchemaFromType</code></td><td>UnrealAgent.Backend/Tool/ToolRegistry.cs:121</td><td>record TInput 리플렉션 → InputSchema 생성</td></tr>
+        <tr><td><code>IAgentTool</code> / <code>AgentTool&lt;TInput&gt;</code></td><td>UnrealAgent.Backend/Tool/IAgentTool.cs:15,41</td><td>도구 계약 인터페이스 + 타입 안전 래퍼 (JSON 자동 역직렬화)</td></tr>
+        <tr><td><code>AgentToolAttribute</code></td><td>UnrealAgent.Backend/Tool/Attributes/AgentToolAttribute.cs</td><td>이름·설명을 선언하는 마커 어트리뷰트</td></tr>
+        <tr><td><code>McpProxyTool.ExecuteAsync</code></td><td>UnrealAgent.Backend/Tool/Tools/McpProxyTool.cs:24</td><td>MCP 원격 호출 프록시 — IAgentTool 구현</td></tr>
+        <tr><td><code>McpClient.InitializeAsync</code></td><td>UnrealAgent.Backend/Mcp/McpClient.cs:28</td><td>initialize 핸드셰이크 (capabilities 교환)</td></tr>
+        <tr><td><code>McpClient.ListToolsAsync</code></td><td>UnrealAgent.Backend/Mcp/McpClient.cs:48</td><td>서버에서 도구 목록 가져오기</td></tr>
+        <tr><td><code>McpClient.CallToolAsync</code></td><td>UnrealAgent.Backend/Mcp/McpClient.cs:66</td><td>tools/call 래퍼</td></tr>
+        <tr><td><code>McpClient.SendAsync</code></td><td>UnrealAgent.Backend/Mcp/McpClient.cs:90</td><td>JSON-RPC 2.0 POST 실제 송신 — Url은 생성자에서 고정</td></tr>
+        <tr><td><code>McpConfig.Load</code></td><td>UnrealAgent.Backend/Mcp/McpConfig.cs:20</td><td>settings.local.json의 mcpServers 섹션 로드</td></tr>
+        <tr><td><code>AgentRunner.EnqueueMessage</code></td><td>UnrealAgent.Backend/Agent/AgentRunner.cs:29</td><td>사용자 메시지 큐 적재 + Signal 해제</td></tr>
+        <tr><td><code>AgentRunner.ExecuteAsync</code></td><td>UnrealAgent.Backend/Agent/AgentRunner.cs:38</td><td>HostedService 루프 — 큐 드레인</td></tr>
+        <tr><td><code>AgentSession.ProcessMessage</code></td><td>UnrealAgent.Backend/Agent/AgentSession.cs:18</td><td>세션 상태로 AgentLoop 호출</td></tr>
+        <tr><td><code>AgentLoop.RunAsync</code></td><td>UnrealAgent.Backend/Agent/AgentLoop.cs:22</td><td>while(true) 에이전트 루프 — 도구 호출 반복</td></tr>
+        <tr><td><code>PromptBuilder.Build</code></td><td>UnrealAgent.Backend/Prompt/PromptBuilder.cs:34</td><td>MessageCreateParams 조립 (system + messages + tools)</td></tr>
+        <tr><td><code>ToolExecutor.ExecuteAsync</code></td><td>UnrealAgent.Backend/Tool/ToolExcuter.cs:19</td><td>도구 실행 + ChatEvent yield + 결과 기록</td></tr>
+        <tr><td><code>ApiStreamSpan.Process/Complete</code></td><td>UnrealAgent.Backend/Chat/ApiStreamSpan.cs:76,223</td><td>Claude 스트림 파싱 + 루프 종료/분기 판정</td></tr>
+        <tr><td><code>AuthConfig</code></td><td>UnrealAgent.Backend/Auth/AuthConfig.cs</td><td>Anthropic 클라이언트 보관 · API Key 관리</td></tr>
+        <tr><td><code>ModelRegistry</code></td><td>UnrealAgent.Backend/Model/ModelRegistry.cs</td><td>[AgentModel] 어트리뷰트 스캔 — 사용 가능한 모델 목록</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>핵심 개념 요약</h3>
+    <ul>
+      <li><b>MCP (Model Context Protocol)</b> — Anthropic 표준. JSON-RPC 2.0 위에서 <code>initialize / tools/list / tools/call</code> 3개 메서드로 도구를 노출.</li>
+      <li><b>리플렉션 자동 등록</b> — UE는 <code>TObjectIterator&lt;UScriptStruct&gt;</code>로, C#은 <code>Assembly.GetTypes() + GetCustomAttribute</code>로. 새 도구 추가 시 레지스트리 코드 수정 없음.</li>
+      <li><b>프록시 패턴</b> — <code>McpProxyTool</code>이 <code>IAgentTool</code>을 구현하여 MCP 원격 호출을 로컬 도구처럼 취급. 호출자는 차이를 모름.</li>
+      <li><b>while(true) 에이전트 루프</b> — Claude가 <code>tool_use</code>를 보낼 때마다 도구 실행 후 messages에 <code>tool_result</code>를 추가하고 재호출. <code>end_turn</code>까지 반복.</li>
+      <li><b>트랜잭션 안전성</b> — Python 실행은 <code>GEditor-&gt;BeginTransaction</code>으로 감싸 실패 시 에디터 상태 롤백 + Undo 지원.</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<script>
+(function(){
+  const buttons = document.querySelectorAll('nav button[data-tab]');
+  const sections = document.querySelectorAll('main section');
+  function show(id){
+    buttons.forEach(b => b.setAttribute('aria-selected', b.dataset.tab === id ? 'true':'false'));
+    sections.forEach(s => { if(s.id===id) s.setAttribute('data-active',''); else s.removeAttribute('data-active'); });
+    window.scrollTo({top:0, behavior:'instant'});
+  }
+  buttons.forEach(b => b.addEventListener('click', () => show(b.dataset.tab)));
+})();
+</script>
+</body>
+</html>

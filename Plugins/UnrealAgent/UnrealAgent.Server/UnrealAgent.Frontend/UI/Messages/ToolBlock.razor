@@ -1,0 +1,46 @@
+﻿@using WebSearchBlock = UnrealAgent.Frontend.UI.Messages.ToolRenderers.WebSearchBlock
+
+<!-- 도구 실행 접기/펼치기 블록입니다. 어시스턴트 메시지와 동일한 레이아웃으로 정렬합니다. -->
+<div class="flex gap-4 max-w-5xl mx-auto w-full z-10 msg-tool msg-enter">
+    <!-- 아바타 자리 (간격 유지)입니다. -->
+    <div class="size-8 shrink-0"></div>
+    <div class="flex flex-col w-full max-w-3xl">
+
+    <details class="group" open="@(!Message.bIsCompleted)">
+        <summary class="cursor-pointer flex items-center gap-3">
+            <!-- 원형 아이콘 -->
+            <div class="shrink-0 w-8 h-8 rounded-full bg-[#1a1a1a] border @BorderClass flex items-center justify-center @ShadowClass @(Message.bIsCompleted ? "" : "animate-pulse")">
+                <span class="material-symbols-outlined @IconColorClass text-[14px] @(Message.bIsCompleted ? "" : "animate-tool-tap")">@Info.Icon</span>
+            </div>
+            <!-- 정보 바 -->
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded @BgClass border @BorderBarClass @TextColorClass hover:brightness-110 transition-all flex-1 max-w-lg shadow-sm @(Message.bIsCompleted ? "" : "shadow-ue-warning-glow")">
+                <div class="flex items-center gap-2 flex-1 min-w-0">
+                    <span class="text-[10px] font-bold uppercase tracking-widest shrink-0">@Info.Label</span>
+                    <span class="text-[10px] @Info.Font bg-black/20 px-1.5 py-0.5 rounded @ToolNameClass border @ToolNameBorderClass tracking-normal truncate" title="@Info.DisplayName">@Info.DisplayName</span>
+                </div>
+                <div class="flex items-center gap-1 px-1.5 py-px rounded bg-black/30 text-[9px] font-mono @TimerColorClass border border-white/5">
+                    <span class="material-symbols-outlined text-[10px]">timer</span>@ElapsedDisplay
+                </div>
+                <span class="material-symbols-outlined text-[16px] transition-transform group-open:rotate-180 ml-2">expand_more</span>
+            </div>
+        </summary>
+
+        <!-- 도구 이름에 따라 적절한 렌더러를 선택합니다. -->
+        <div class="ml-11 mt-2">
+            @if (Message.Name is "web_search")
+            {
+                <WebSearchBlock Message="Message"/>
+            }
+            else if (Message.Name is "web_fetch")
+            {
+                <WebFetchBlock Message="Message"/>
+            }
+            else if (CodeBlock.IsCodeTool(Message.Name))
+            {
+                <CodeBlock Message="Message"/>
+            }
+        </div>
+    </details>
+
+    </div>
+</div>

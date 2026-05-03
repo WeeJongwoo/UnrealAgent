@@ -1,0 +1,62 @@
+﻿<!-- 사고 과정(Extended Thinking) 블록 — AssistantMessage와 동일한 아바타 레이아웃입니다. -->
+<div class="flex gap-4 max-w-5xl mx-auto w-full z-10 msg-enter">
+    <!-- AI 아바타 (AssistantMessage와 동일) -->
+    <div class="size-8 shrink-0 rounded bg-gradient-to-b from-[#333] to-[#1a1a1a] flex items-center justify-center shadow-lg relative overflow-hidden border border-[#444] mt-1">
+        <span class="font-sans font-black text-[#e0e0e0] text-sm leading-none drop-shadow-sm">U</span>
+    </div>
+
+    <!-- 메시지 영역 -->
+    <div class="flex flex-col gap-3 w-full max-w-3xl">
+        <!-- 이름 + 타임스탬프 -->
+        <div class="flex items-baseline gap-2">
+            <span class="text-xs font-bold text-[#e0e0e0] tracking-wide">UnrealAgent</span>
+            <span class="text-[10px] text-[#555] font-sans">@Message.StartTime.ToString("h:mm tt")</span>
+        </div>
+
+        <!-- 접기/펼치기 details 블록 -->
+        <details class="group" open="@(!bIsCompleted)">
+            <!-- 헤더: 아이콘 + 정보 바 -->
+            <summary class="cursor-pointer flex items-center gap-3">
+                <!-- 원형 아이콘: 완료 시 녹색, 진행 중 파란색 + 펄스 애니메이션 -->
+                <div class="shrink-0 w-8 h-8 rounded-full bg-[#1a1a1a] border @BorderClass flex items-center justify-center @ShadowClass @(bIsCompleted ? "" : "animate-pulse")">
+                    <span class="material-symbols-outlined @IconColorClass text-[14px] @(bIsCompleted ? "" : "animate-think-wobble")">neurology</span>
+                </div>
+
+                <!-- 정보 바: 상태 텍스트 + 경과 시간 + 펼치기 아이콘 -->
+                <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded @BgClass border @BorderBarClass @TextColorClass hover:brightness-110 transition-all flex-1 max-w-md shadow-sm">
+                    <!-- 상태 레이블 -->
+                    <span class="text-[10px] font-bold tracking-widest uppercase flex-1">
+                        @(bIsCompleted ? "Thinking" : "Analyzing…")
+                    </span>
+
+                    <!-- 경과 시간 타이머 -->
+                    <div class="flex items-center gap-1 px-1.5 py-px rounded bg-black/30 text-[9px] font-mono @TimerColorClass border border-white/5">
+                        <span class="material-symbols-outlined text-[10px]">timer</span>@ElapsedDisplay
+                    </div>
+
+                    <!-- 펼치기/접기 화살표 -->
+                    <span class="material-symbols-outlined text-[16px] transition-transform group-open:rotate-180">expand_more</span>
+                </div>
+            </summary>
+
+            <!-- 사고 내용 본문 -->
+            <div class="ml-11 mt-2 px-4 py-3 rounded bg-[#111] border border-[#2a2a2a] text-[12px] text-[#888] leading-relaxed max-w-md font-normal italic max-h-60 overflow-y-auto">
+                <!-- 줄 단위 사고 텍스트 -->
+                @{ string[] lines = SplitLines(); }
+                @for (int i = 0; i < lines.Length; i++)
+                {
+                    <p class="text-[#aaa] @(i > 0 ? "mt-1.5" : "")">@lines[i]</p>
+                }
+
+                <!-- 진행 중일 때 표시되는 시머(shimmer) 로딩 효과 -->
+                @if (!bIsCompleted)
+                {
+                    <div class="mt-2 flex flex-col gap-1 opacity-50">
+                        <div class="h-2 rounded bg-white/5 shimmer-bg animate-shimmer w-4/5"></div>
+                        <div class="h-2 rounded bg-white/5 shimmer-bg animate-shimmer w-3/5"></div>
+                    </div>
+                }
+            </div>
+        </details>
+    </div>
+</div>

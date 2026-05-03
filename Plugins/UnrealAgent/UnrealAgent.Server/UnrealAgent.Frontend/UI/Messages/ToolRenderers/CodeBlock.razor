@@ -1,0 +1,25 @@
+﻿@inherits JsComponentBase
+
+<!-- 코드 실행 도구 전용 렌더러입니다. 코드 입력과 실행 결과를 표시합니다. -->
+@if (!string.IsNullOrEmpty(Message.Input))
+{
+    <div class="px-3 py-1.5 bg-[#151515] text-[#888] border-b border-[#222] uppercase font-bold tracking-wider text-[9px]">Input</div>
+    <div class="bg-[#0a0a0a]">
+        <pre class="!m-0 !p-3 !bg-[#0a0a0a] text-[12px] leading-6"><code @ref="CodeRef" class="@LanguageClass !bg-transparent">@ExtractCode(Message.Input)</code></pre>
+    </div>
+}
+
+<div class="border-t border-[#222] px-3 py-1.5 bg-[#151515] text-[#888] uppercase font-bold tracking-wider text-[9px]">Output</div>
+<div class="p-3 max-h-32 overflow-y-auto font-mono text-[11px] leading-relaxed bg-[#0a0a0a]">
+    @if (Message.bIsCompleted)
+    {
+        @foreach (var Line in OutputLines())
+        {
+            <div class="flex gap-2">@((MarkupString)FormatOutputLine(Line))</div>
+        }
+    }
+    else
+    {
+        <div class="animate-pulse text-[#d68a51]">실행 중...</div>
+    }
+</div>

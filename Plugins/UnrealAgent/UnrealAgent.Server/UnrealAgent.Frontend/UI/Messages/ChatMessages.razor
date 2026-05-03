@@ -1,0 +1,33 @@
+﻿<div class="flex-1 overflow-y-auto px-4 md:px-8 lg:px-12 py-6 flex flex-col gap-8 scroll-smooth bg-[#111] relative" id="messages-container">
+    <!-- 그리드 패턴 배경 -->
+    <div class="absolute inset-0 pointer-events-none opacity-[0.03]" style="background-image: linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px); background-size: 20px 20px;"></div>
+
+    <!-- 채팅 메세지 -->
+    @if (Messages.Count == 0)
+    {
+        <EmptyState />
+    }
+    else
+    {
+        @foreach (var Msg in Messages)
+        {
+            <MessageBubble UIMessage="Msg" />
+        }
+    }
+    @if (bIsReceiving)
+    {
+        <!-- 응답 생성 중 shimmer 인디케이터입니다. -->
+        <div class="flex gap-4 max-w-5xl mx-auto w-full z-10 msg-enter">
+            <div class="size-8 shrink-0 rounded bg-gradient-to-b from-[#333] to-[#1a1a1a] flex items-center justify-center shadow-lg relative overflow-hidden border border-[#444] mt-1">
+                <span class="font-sans font-black text-[#e0e0e0] text-sm leading-none drop-shadow-sm">U</span>
+            </div>
+            <div class="flex flex-col gap-2 w-full max-w-md mt-2 opacity-50">
+                <div class="h-2 rounded bg-white/5 shimmer-bg animate-shimmer w-3/4"></div>
+                <div class="h-2 rounded bg-white/5 shimmer-bg animate-shimmer w-full"></div>
+                <div class="h-2 rounded bg-white/5 shimmer-bg animate-shimmer w-5/6"></div>
+            </div>
+        </div>
+    }
+    
+    <div id="messages-bottom"></div>
+</div>

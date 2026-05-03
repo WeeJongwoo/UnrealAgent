@@ -1,0 +1,13 @@
+﻿<!-- Thinking 토글 스위치입니다. -->
+<label class="relative flex items-center cursor-pointer gap-2 group/toggle">
+    <input type="checkbox" class="sr-only peer" checked="@Settings.bThinkingEnabled" @onchange="Toggle" />
+    <span class="text-[9px] font-bold @LabelColorClass uppercase tracking-wider group-hover/toggle:text-white transition-colors mr-1">THINKING</span>
+    <div class="relative">
+        <div class="w-7 h-3.5 rounded-full think-track @TrackClass"></div>
+    </div>
+    <!-- 툴팁입니다. -->
+    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-48 p-2.5 bg-[#151515]/90 backdrop-blur-md border border-[#333] rounded shadow-xl text-[10px] ue-tooltip z-50">
+        <div class="text-[#e0e0e0] font-medium leading-tight">복잡한 로직 처리를 위한 심층 추론을 활성화합니다.</div>
+        <div class="absolute bottom-[-5px] left-1/2 -translate-x-1/2 w-2.5 h-2.5 bg-[#151515]/90 border-b border-r border-[#333] rotate-45"></div>
+    </div>
+</label>

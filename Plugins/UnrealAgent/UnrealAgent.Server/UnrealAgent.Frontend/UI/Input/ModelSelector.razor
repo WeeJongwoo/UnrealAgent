@@ -1,0 +1,32 @@
+﻿<!-- 모델 선택 드롭다운입니다. -->
+<div class="relative" data-dropdown>
+    <button @onclick="ToggleDropdown"
+            class="flex items-center gap-1.5 px-2 py-1 rounded-sm text-[10px] font-semibold text-[#ccc] bg-[#222] hover:bg-[#2a2a2a] transition-all border border-[#333] hover:border-[#444] hover:text-white shadow-sm">
+        <span class="font-sans font-black text-[#e0e0e0] text-xs">@ModelIcon</span>
+        <span class="model-label">@Settings.DisplayName</span>
+        <span class="material-symbols-outlined text-[12px] text-[#666]">expand_more</span>
+    </button>
+
+    @if (bIsOpen)
+    {
+        <div class="absolute bottom-full mb-2 left-0 min-w-[220px] bg-[#0f0f0f] border border-[#333] rounded p-1 shadow-2xl shadow-black/50 z-50">
+            @foreach (var Model in Registry.CurrentModels)
+            {
+                <button @onclick="() => SelectModel(Model)"
+                        class="flex items-center gap-2.5 w-full px-2.5 py-2 rounded hover:bg-[#242424] transition-colors text-left @(Model.Id == Settings.Model ? "bg-white/[0.04]" : "")">
+                    <span class="size-6 rounded @GetIconBg(Model) flex items-center justify-center text-[10px] font-bold @GetIconColor(Model) shrink-0 border border-[#444]">
+                        @Model.DisplayName[0]
+                    </span>
+                    <div class="flex flex-col">
+                        <span class="text-[13px] font-medium text-[#ccc]">@Model.DisplayName</span>
+                        <span class="text-[11px] text-[#999]">@Model.Description</span>
+                    </div>
+                    @if (Model.Id == Settings.Model)
+                    {
+                        <span class="material-symbols-outlined text-[#ccc] text-[14px] ml-auto">check</span>
+                    }
+                </button>
+            }
+        </div>
+    }
+</div>

@@ -1,0 +1,9 @@
+﻿@using UnrealAgent.Frontend.Layout
+
+<!-- 라우터: 현재 URL을 보고 @page가 일치하는 페이지 컴포넌트를 찾아 렌더링 -->
+<Router AppAssembly="typeof(Program).Assembly">
+    <!-- 매칭되는 페이지를 찾았을 때 → MainLayout 안에 해당 페이지를 렌더링 -->
+    <Found Context="routeData">
+        <RouteView RouteData="routeData" DefaultLayout="typeof(MainLayout)" />
+    </Found>
+</Router>

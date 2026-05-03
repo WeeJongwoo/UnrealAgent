@@ -1,0 +1,372 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 2050" font-family="'Segoe UI','Malgun Gothic',sans-serif" font-size="13">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+    <marker id="arrBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1565c0"/>
+    </marker>
+    <marker id="arrGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2e7d32"/>
+    </marker>
+    <marker id="arrOrange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#e65100"/>
+    </marker>
+    <style>
+      .title { font-size: 24px; font-weight: 700; fill: #222; }
+      .subtitle { font-size: 17px; font-weight: 700; fill: #333; }
+      .modTitle { font-size: 14px; font-weight: 700; fill: #fff; }
+      .boxTitle { font-size: 13px; font-weight: 700; fill: #111; }
+      .small { font-size: 11px; fill: #444; }
+      .mono { font-family: Consolas,'Courier New',monospace; font-size: 11px; fill: #222; }
+      .edge { stroke: #333; stroke-width: 1.5; fill: none; }
+      .edgeBlue { stroke: #1565c0; stroke-width: 1.8; fill: none; }
+      .edgeGreen { stroke: #2e7d32; stroke-width: 1.8; fill: none; }
+      .edgeOrange { stroke: #e65100; stroke-width: 1.8; fill: none; }
+      .edgeDash { stroke: #666; stroke-width: 1.3; stroke-dasharray: 5 4; fill: none; }
+      .lifeline { stroke: #888; stroke-width: 1; stroke-dasharray: 3 3; }
+    </style>
+  </defs>
+
+  <!-- ===== HEADER ===== -->
+  <rect width="1600" height="60" fill="#1a237e"/>
+  <text x="30" y="40" class="title" fill="#fff">UnrealAgent.Server — 아키텍처 &amp; 에이전트 루프 동작 흐름</text>
+  <text x="1350" y="40" class="small" fill="#c5cae9">Claude Opus 4.6 · Anthropic SDK · DI</text>
+
+  <!-- ============================================================ -->
+  <!-- PANEL 1: 모듈 구조                                              -->
+  <!-- ============================================================ -->
+  <text x="30" y="100" class="subtitle">① 모듈 / DI 구조</text>
+
+  <!-- Frontend -->
+  <rect x="30" y="115" width="340" height="110" rx="8" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
+  <rect x="30" y="115" width="340" height="26" rx="8" fill="#e65100"/>
+  <text x="45" y="134" class="modTitle">UnrealAgent.Frontend (Console)</text>
+  <rect x="50" y="155" width="300" height="55" rx="4" fill="#fff" stroke="#e65100"/>
+  <text x="60" y="173" class="boxTitle">Program.cs</text>
+  <text x="60" y="190" class="small">• DI 부트스트랩 (ServiceCollection)</text>
+  <text x="60" y="204" class="small">• 에이전트 루프 (while bContinue)</text>
+
+  <!-- Backend container -->
+  <rect x="400" y="115" width="1170" height="720" rx="10" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+  <rect x="400" y="115" width="1170" height="26" rx="10" fill="#1565c0"/>
+  <text x="415" y="134" class="modTitle">UnrealAgent.Backend</text>
+
+  <!-- Auth -->
+  <rect x="420" y="160" width="220" height="90" rx="6" fill="#fff" stroke="#1565c0"/>
+  <text x="430" y="178" class="boxTitle">Auth 모듈</text>
+  <rect x="430" y="188" width="200" height="52" rx="4" fill="#f5f5f5" stroke="#90caf9"/>
+  <text x="440" y="205" class="mono">AuthConfig</text>
+  <text x="440" y="220" class="small">• ApiKey Load/Save</text>
+  <text x="440" y="234" class="small">• AnthropicClient 생성</text>
+
+  <!-- Agent -->
+  <rect x="660" y="160" width="220" height="90" rx="6" fill="#fff" stroke="#1565c0"/>
+  <text x="670" y="178" class="boxTitle">Agent 모듈</text>
+  <rect x="670" y="188" width="200" height="52" rx="4" fill="#f5f5f5" stroke="#90caf9"/>
+  <text x="680" y="205" class="mono">AgentSession</text>
+  <text x="680" y="220" class="small">• Conversation 보유</text>
+  <text x="680" y="234" class="small">• 세션 단일 인스턴스</text>
+
+  <!-- Prompt -->
+  <rect x="900" y="160" width="220" height="90" rx="6" fill="#fff" stroke="#1565c0"/>
+  <text x="910" y="178" class="boxTitle">Prompt 모듈</text>
+  <rect x="910" y="188" width="200" height="52" rx="4" fill="#f5f5f5" stroke="#90caf9"/>
+  <text x="920" y="205" class="mono">PromptBuilder</text>
+  <text x="920" y="220" class="small">• System + Messages + Tools</text>
+  <text x="920" y="234" class="small">• MessageCreateParams 반환</text>
+
+  <!-- Core -->
+  <rect x="1140" y="160" width="410" height="90" rx="6" fill="#fff" stroke="#1565c0"/>
+  <text x="1150" y="178" class="boxTitle">Core 모듈 (도메인 레코드)</text>
+  <rect x="1150" y="188" width="185" height="52" rx="4" fill="#f5f5f5" stroke="#90caf9"/>
+  <text x="1160" y="205" class="mono">Block</text>
+  <text x="1160" y="220" class="small">Text / Thinking</text>
+  <text x="1160" y="234" class="small">/ ToolUse</text>
+  <rect x="1345" y="188" width="195" height="52" rx="4" fill="#f5f5f5" stroke="#90caf9"/>
+  <text x="1355" y="205" class="mono">ChatEvent</text>
+  <text x="1355" y="220" class="small">Text / ToolStart / ToolEnd</text>
+  <text x="1355" y="234" class="small">(UI 이벤트 디스크)</text>
+
+  <!-- Conversation 모듈 -->
+  <rect x="420" y="275" width="700" height="230" rx="6" fill="#fff" stroke="#1565c0"/>
+  <text x="430" y="293" class="boxTitle">Conversation 모듈 (히스토리 + 스트림 파서)</text>
+
+  <rect x="440" y="305" width="200" height="80" rx="4" fill="#e8f5e9" stroke="#2e7d32"/>
+  <text x="450" y="322" class="mono">Conversation</text>
+  <text x="450" y="338" class="small">MessageSpan[] 보유</text>
+  <text x="450" y="352" class="small">AddMessageSpan(input)</text>
+  <text x="450" y="366" class="small">ToAnthropicMessages()</text>
+  <text x="450" y="380" class="small" fill="#2e7d32">→ Anthropic SDK 포맷</text>
+
+  <rect x="660" y="305" width="200" height="80" rx="4" fill="#e8f5e9" stroke="#2e7d32"/>
+  <text x="670" y="322" class="mono">MessageSpan</text>
+  <text x="670" y="338" class="small">UserInput: string</text>
+  <text x="670" y="352" class="small">AssistantSpans: List</text>
+  <text x="670" y="368" class="small">(유저턴 1회 = 1개)</text>
+
+  <rect x="880" y="305" width="220" height="80" rx="4" fill="#e8f5e9" stroke="#2e7d32"/>
+  <text x="890" y="322" class="mono">AssistantSpan</text>
+  <text x="890" y="338" class="small">AssistantBlocks: Block[]</text>
+  <text x="890" y="352" class="small">ToolExecutions: List</text>
+  <text x="890" y="368" class="small">(API 호출 1회 결과)</text>
+
+  <rect x="440" y="400" width="660" height="90" rx="4" fill="#fffde7" stroke="#f9a825"/>
+  <text x="450" y="418" class="mono">ApiStreamSpan  (스트림 파서 FSM)</text>
+  <text x="450" y="436" class="small">Process(RawMessageStreamEvent) → 내부 버퍼 누적 + ChatEvent.Text 방출</text>
+  <text x="450" y="452" class="small">Complete() → Result.EndSpan | Result.ExecuteTools(ToolCalls) | Result.Continue</text>
+  <text x="450" y="472" class="small" fill="#e65100">※ Discriminated Union (sealed record) — Program.cs switch 패턴매칭</text>
+
+  <!-- Tool 모듈 -->
+  <rect x="420" y="525" width="1130" height="290" rx="6" fill="#fff" stroke="#1565c0"/>
+  <text x="430" y="543" class="boxTitle">Tool 모듈 (플러그인 레지스트리 + 래퍼)</text>
+
+  <!-- Registry/Executor -->
+  <rect x="440" y="555" width="230" height="90" rx="4" fill="#f3e5f5" stroke="#6a1b9a"/>
+  <text x="450" y="572" class="mono">ToolRegistry</text>
+  <text x="450" y="588" class="small">Dictionary&lt;string, ToolEntry&gt;</text>
+  <text x="450" y="602" class="small">DiscoverTools(Assembly[])</text>
+  <text x="450" y="616" class="small">  → Reflection + [AgentTool]</text>
+  <text x="450" y="630" class="small">  → ActivatorUtilities (DI)</text>
+
+  <rect x="690" y="555" width="230" height="90" rx="4" fill="#f3e5f5" stroke="#6a1b9a"/>
+  <text x="700" y="572" class="mono">ToolExecutor</text>
+  <text x="700" y="588" class="small">ExecuteAsync(ToolCall, span, sess)</text>
+  <text x="700" y="602" class="small">  → Registry 에 위임</text>
+  <text x="700" y="616" class="small">  → ToolExecutions.Add</text>
+  <text x="700" y="630" class="small">  → ChatEvent.ToolStart/End</text>
+
+  <!-- 제네릭 어댑터 -->
+  <rect x="940" y="555" width="590" height="90" rx="4" fill="#ede7f6" stroke="#311b92"/>
+  <text x="950" y="572" class="mono">IAgentTool  &lt;|--  AgentTool&lt;TInput&gt; (abstract)</text>
+  <text x="950" y="590" class="small">ExecuteAsync(string json, AgentSession, CT) → 기본 구현이 JsonSerializer.Deserialize&lt;TInput&gt; 수행</text>
+  <text x="950" y="606" class="small">protected abstract ExecuteAsync(TInput, AgentSession, CT)  — 서브클래스가 타입안전 오버라이드</text>
+  <text x="950" y="626" class="small" fill="#311b92">※ 래퍼 = "JSON→T 변환 + 결과 표준화" 를 상속만으로 공짜로 얻음</text>
+
+  <!-- Concrete tools -->
+  <rect x="440" y="665" width="350" height="135" rx="4" fill="#e1f5fe" stroke="#0277bd"/>
+  <text x="450" y="683" class="mono">[AgentTool("web_search")]  WebSearch</text>
+  <text x="450" y="700" class="small">생성자: WebSearch(AuthConfig Auth)</text>
+  <text x="450" y="715" class="small">입력: Query / AllowedDomains / BlockedDomains</text>
+  <text x="450" y="730" class="small">동작:</text>
+  <text x="450" y="745" class="small">  • Auth.Client.Messages.Create (sub-call)</text>
+  <text x="450" y="760" class="small">  • Model = claude-haiku-4-5-20251001</text>
+  <text x="450" y="775" class="small">  • Tools = [ WebSearchTool20250305 ]</text>
+  <text x="450" y="792" class="small" fill="#0277bd">→ SearchResult JSON 반환</text>
+
+  <rect x="810" y="665" width="720" height="135" rx="4" fill="#e1f5fe" stroke="#0277bd"/>
+  <text x="820" y="683" class="mono">[AgentTool("web_fetch")]  WebFetch</text>
+  <text x="820" y="700" class="small">생성자: WebFetch(AuthConfig Auth, IHttpClientFactory HttpFactory)   ← 래퍼 주입</text>
+  <text x="820" y="717" class="small">파이프라인:</text>
+  <text x="820" y="732" class="small">  ValidateUrl (HTTPS) → TryGetCached (15분 ConcurrentDictionary)</text>
+  <text x="820" y="747" class="small">  → FetchAsync (HttpClient 스트리밍, 10MB 제한) → ConvertToMarkdown (ReverseMarkdown)</text>
+  <text x="820" y="762" class="small">  → ApplyWithHaikuAsync (Claude Haiku 요약, 저작권 가이던스)</text>
+  <text x="820" y="779" class="small" fill="#0277bd">→ ToolResult.Success (요약된 콘텐츠)</text>
+
+  <!-- DI arrows -->
+  <path class="edgeBlue" marker-end="url(#arrBlue)" d="M200,225 L200,255 L200,275"/>
+  <text x="170" y="268" class="small" fill="#1565c0">DI 참조</text>
+
+  <path class="edgeDash" marker-end="url(#arr)" d="M530,645 L530,665"/>
+  <path class="edgeDash" marker-end="url(#arr)" d="M900,645 L900,665"/>
+  <text x="540" y="660" class="small">상속</text>
+  <text x="910" y="660" class="small">상속</text>
+
+  <path class="edgeDash" marker-end="url(#arr)" d="M670,600 L555,600"/>
+  <text x="580" y="595" class="small">위임</text>
+
+  <!-- Reflection discovery arrow -->
+  <path class="edgeDash" marker-end="url(#arr)" d="M555,645 Q400,700 430,730 L440,700"/>
+  <text x="370" y="700" class="small" transform="rotate(-20 370,700)">Discover</text>
+
+  <!-- ============================================================ -->
+  <!-- PANEL 2: 에이전트 루프 시퀀스                                    -->
+  <!-- ============================================================ -->
+  <text x="30" y="880" class="subtitle">② 에이전트 루프 — 사용자 입력 1회가 Claude API N회 호출로 확장되는 과정</text>
+
+  <!-- Lifelines -->
+  <g>
+    <rect x="40"  y="910" width="130" height="32" rx="4" fill="#fff3e0" stroke="#e65100"/>
+    <text x="105" y="930" text-anchor="middle" class="boxTitle">User (Console)</text>
+    <line x1="105" y1="942" x2="105" y2="1700" class="lifeline"/>
+
+    <rect x="200" y="910" width="130" height="32" rx="4" fill="#fff3e0" stroke="#e65100"/>
+    <text x="265" y="930" text-anchor="middle" class="boxTitle">Program.cs</text>
+    <line x1="265" y1="942" x2="265" y2="1700" class="lifeline"/>
+
+    <rect x="360" y="910" width="130" height="32" rx="4" fill="#e3f2fd" stroke="#1565c0"/>
+    <text x="425" y="930" text-anchor="middle" class="boxTitle">AgentSession</text>
+    <line x1="425" y1="942" x2="425" y2="1700" class="lifeline"/>
+
+    <rect x="520" y="910" width="130" height="32" rx="4" fill="#e3f2fd" stroke="#1565c0"/>
+    <text x="585" y="930" text-anchor="middle" class="boxTitle">PromptBuilder</text>
+    <line x1="585" y1="942" x2="585" y2="1700" class="lifeline"/>
+
+    <rect x="680" y="910" width="130" height="32" rx="4" fill="#fffde7" stroke="#f9a825"/>
+    <text x="745" y="930" text-anchor="middle" class="boxTitle">ApiStreamSpan</text>
+    <line x1="745" y1="942" x2="745" y2="1700" class="lifeline"/>
+
+    <rect x="840" y="910" width="150" height="32" rx="4" fill="#c8e6c9" stroke="#2e7d32"/>
+    <text x="915" y="930" text-anchor="middle" class="boxTitle">Anthropic API</text>
+    <line x1="915" y1="942" x2="915" y2="1700" class="lifeline"/>
+
+    <rect x="1020" y="910" width="130" height="32" rx="4" fill="#f3e5f5" stroke="#6a1b9a"/>
+    <text x="1085" y="930" text-anchor="middle" class="boxTitle">ToolExecutor</text>
+    <line x1="1085" y1="942" x2="1085" y2="1700" class="lifeline"/>
+
+    <rect x="1180" y="910" width="130" height="32" rx="4" fill="#f3e5f5" stroke="#6a1b9a"/>
+    <text x="1245" y="930" text-anchor="middle" class="boxTitle">ToolRegistry</text>
+    <line x1="1245" y1="942" x2="1245" y2="1700" class="lifeline"/>
+
+    <rect x="1340" y="910" width="200" height="32" rx="4" fill="#e1f5fe" stroke="#0277bd"/>
+    <text x="1440" y="930" text-anchor="middle" class="boxTitle">Tool (WebSearch/Fetch)</text>
+    <line x1="1440" y1="942" x2="1440" y2="1700" class="lifeline"/>
+  </g>
+
+  <!-- Step 1: user input -->
+  <path class="edgeOrange" marker-end="url(#arrOrange)" d="M105,970 L263,970"/>
+  <text x="110" y="965" class="small">1. Console.ReadLine()</text>
+
+  <!-- Step 2: AddMessageSpan -->
+  <path class="edgeBlue" marker-end="url(#arrBlue)" d="M265,1000 L423,1000"/>
+  <text x="270" y="995" class="small">2. Conversation.AddMessageSpan(input) → MessageSpan</text>
+
+  <!-- Loop bracket -->
+  <rect x="215" y="1020" width="1320" height="620" rx="5" fill="none" stroke="#1a237e" stroke-width="1.3" stroke-dasharray="6 4"/>
+  <rect x="215" y="1020" width="95" height="20" fill="#1a237e"/>
+  <text x="262" y="1035" text-anchor="middle" class="modTitle">loop bContinue</text>
+
+  <!-- Step 3: Build -->
+  <path class="edgeBlue" marker-end="url(#arrBlue)" d="M265,1070 L583,1070"/>
+  <text x="270" y="1065" class="small">3. PromptBuilder.Build(AgentSession)</text>
+
+  <!-- 3a: inside PB -->
+  <path class="edgeDash" marker-end="url(#arr)" d="M585,1100 L425,1100"/>
+  <text x="430" y="1095" class="small">3a. Conversation.ToAnthropicMessages()</text>
+
+  <path class="edgeDash" marker-end="url(#arr)" d="M585,1130 Q900,1115 1243,1130"/>
+  <text x="860" y="1120" class="small">3b. ToolRegistry.GetAllSchemas()  (JSON Schema 자동 생성)</text>
+
+  <!-- 3c return -->
+  <path class="edgeBlue" marker-end="url(#arrBlue)" d="M583,1160 L267,1160"/>
+  <text x="290" y="1155" class="small">4. MessageCreateParams { System, Messages, Tools, Model="claude-opus-4-6" }</text>
+
+  <!-- Step 5: CreateStreaming -->
+  <path class="edgeGreen" marker-end="url(#arrGreen)" d="M265,1195 L913,1195"/>
+  <text x="290" y="1190" class="small">5. Auth.Client.Messages.CreateStreaming(params)</text>
+
+  <!-- inner streaming loop -->
+  <rect x="715" y="1215" width="240" height="100" rx="4" fill="none" stroke="#2e7d32" stroke-dasharray="4 3"/>
+  <text x="720" y="1230" class="small" fill="#2e7d32">loop 각 StreamEvent</text>
+  <path class="edgeGreen" marker-end="url(#arrGreen)" d="M915,1255 L747,1255"/>
+  <text x="760" y="1250" class="small">RawMessageStreamEvent</text>
+  <path class="edgeGreen" marker-end="url(#arrGreen)" d="M745,1285 L267,1285"/>
+  <text x="430" y="1280" class="small">Process(evt) → ChatEvent.Text → Console.Write</text>
+
+  <!-- Step 6: Complete -->
+  <path class="edgeBlue" marker-end="url(#arrBlue)" d="M265,1340 L743,1340"/>
+  <text x="280" y="1335" class="small">6. ApiStreamSpan.Complete() → Result (discriminated union)</text>
+
+  <!-- Branch box -->
+  <rect x="230" y="1360" width="1290" height="270" rx="4" fill="#f5f5f5" stroke="#555" stroke-dasharray="3 3"/>
+  <text x="240" y="1378" class="small" fill="#333">switch (Result)</text>
+
+  <!-- Branch A: EndSpan -->
+  <rect x="250" y="1390" width="390" height="220" rx="4" fill="#e8f5e9" stroke="#2e7d32"/>
+  <text x="260" y="1408" class="boxTitle">A. Result.EndSpan  (end_turn)</text>
+  <text x="260" y="1430" class="small">• MessageSpan.AssistantSpans.Add(span)</text>
+  <text x="260" y="1448" class="small">• bContinue = false  →  루프 탈출</text>
+  <text x="260" y="1476" class="small" fill="#2e7d32">✅ 사용자에게 제어 반환</text>
+
+  <!-- Branch B: ExecuteTools -->
+  <rect x="650" y="1390" width="560" height="220" rx="4" fill="#ede7f6" stroke="#311b92"/>
+  <text x="660" y="1408" class="boxTitle">B. Result.ExecuteTools  (ToolUse 포함)</text>
+  <text x="660" y="1428" class="small">foreach (Block.ToolUse tc in ToolCalls):</text>
+  <text x="660" y="1446" class="small">  • ToolExecutor.ExecuteAsync(tc, span, session)</text>
+  <text x="660" y="1462" class="small">      → ToolRegistry.ExecuteAsync(name, json, session)</text>
+  <text x="660" y="1478" class="small">         → IAgentTool.ExecuteAsync(json, ...)</text>
+  <text x="660" y="1494" class="small">            → AgentTool&lt;T&gt; 기본 구현이 JSON→T 역직렬화</text>
+  <text x="660" y="1510" class="small">               → 서브클래스 ExecuteAsync(T, ...) 호출</text>
+  <text x="660" y="1526" class="small">  • ChatEvent.ToolStart/End → Console.WriteLine</text>
+  <text x="660" y="1546" class="small">  • AssistantSpan.ToolExecutions.Add(result)</text>
+  <text x="660" y="1572" class="small" fill="#311b92">🔁 bContinue = true → 결과 포함 3번으로 돌아감</text>
+
+  <!-- Branch C: Continue -->
+  <rect x="1220" y="1390" width="290" height="220" rx="4" fill="#fffde7" stroke="#f9a825"/>
+  <text x="1230" y="1408" class="boxTitle">C. Result.Continue</text>
+  <text x="1230" y="1428" class="small">  (pause_turn — 응답 잘림)</text>
+  <text x="1230" y="1456" class="small">• AssistantSpans.Add(span)</text>
+  <text x="1230" y="1474" class="small">• 히스토리로 이어서 재호출</text>
+  <text x="1230" y="1500" class="small" fill="#f9a825">🔁 bContinue = true</text>
+
+  <!-- Arrow: Program → ToolExecutor -->
+  <path class="edgeOrange" marker-end="url(#arrOrange)" d="M265,1655 L1083,1655"/>
+  <text x="280" y="1650" class="small">7. (Branch B) ToolExecutor.ExecuteAsync</text>
+
+  <path class="edgeOrange" marker-end="url(#arrOrange)" d="M1085,1680 L1243,1680"/>
+  <text x="1090" y="1675" class="small">8. Registry.ExecuteAsync(name, json)</text>
+
+  <!-- ============================================================ -->
+  <!-- PANEL 3: 툴 위임 체인 상세                                       -->
+  <!-- ============================================================ -->
+  <text x="30" y="1740" class="subtitle">③ 툴 호출 위임 체인 (래퍼가 어떻게 전달되는가)</text>
+
+  <!-- Chain boxes -->
+  <rect x="30"  y="1760" width="220" height="70" rx="6" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+  <text x="40"  y="1780" class="boxTitle">Claude API 응답</text>
+  <text x="40"  y="1798" class="small">Block.ToolUse</text>
+  <text x="40"  y="1814" class="small">  { Id, Name, InputJson }</text>
+
+  <rect x="290" y="1760" width="220" height="70" rx="6" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+  <text x="300" y="1780" class="boxTitle">ToolExecutor</text>
+  <text x="300" y="1798" class="small">AssistantSpan.ToolExecutions.Add</text>
+  <text x="300" y="1814" class="small">ChatEvent 스트림 방출</text>
+
+  <rect x="550" y="1760" width="220" height="70" rx="6" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="1.5"/>
+  <text x="560" y="1780" class="boxTitle">ToolRegistry</text>
+  <text x="560" y="1798" class="small">Tools[name].Tool.ExecuteAsync</text>
+  <text x="560" y="1814" class="small">(이름 → 인스턴스 조회)</text>
+
+  <rect x="810" y="1760" width="240" height="70" rx="6" fill="#ede7f6" stroke="#311b92" stroke-width="1.5"/>
+  <text x="820" y="1780" class="boxTitle">AgentTool&lt;TInput&gt;  (base)</text>
+  <text x="820" y="1798" class="small">JsonSerializer.Deserialize&lt;T&gt;</text>
+  <text x="820" y="1814" class="small">→ 추상 오버라이드 호출</text>
+
+  <rect x="1090" y="1760" width="220" height="70" rx="6" fill="#e1f5fe" stroke="#0277bd" stroke-width="1.5"/>
+  <text x="1100" y="1780" class="boxTitle">WebSearch / WebFetch</text>
+  <text x="1100" y="1798" class="small">실제 로직 (서브 API, HTTP)</text>
+  <text x="1100" y="1814" class="small">→ ToolResult 반환</text>
+
+  <rect x="1350" y="1760" width="220" height="70" rx="6" fill="#c8e6c9" stroke="#2e7d32" stroke-width="1.5"/>
+  <text x="1360" y="1780" class="boxTitle">Claude Haiku (서브호출)</text>
+  <text x="1360" y="1798" class="small">모델: claude-haiku-4-5</text>
+  <text x="1360" y="1814" class="small">검색/요약 수행</text>
+
+  <!-- chain arrows -->
+  <path class="edge" marker-end="url(#arr)" d="M250,1795 L290,1795"/>
+  <path class="edge" marker-end="url(#arr)" d="M510,1795 L550,1795"/>
+  <path class="edge" marker-end="url(#arr)" d="M770,1795 L810,1795"/>
+  <path class="edge" marker-end="url(#arr)" d="M1050,1795 L1090,1795"/>
+  <path class="edgeGreen" marker-end="url(#arrGreen)" d="M1310,1795 L1350,1795"/>
+
+  <!-- DI inject note -->
+  <rect x="30" y="1860" width="1540" height="60" rx="6" fill="#fafafa" stroke="#999"/>
+  <text x="40" y="1880" class="boxTitle">래퍼 전달 방식 (DI)</text>
+  <text x="40" y="1900" class="small">ToolRegistry.DiscoverTools()가 [AgentTool] 붙은 타입을 스캔 → ActivatorUtilities.CreateInstance(ServiceProvider, Type) 로 생성 →</text>
+  <text x="40" y="1914" class="small">생성자 파라미터(AuthConfig, IHttpClientFactory 등)가 DI 컨테이너에서 자동 주입됨. 결과적으로 툴은 "AnthropicClient 래퍼"와 "HttpClient 팩토리 래퍼"를 필드로 보유.</text>
+
+  <!-- Legend -->
+  <rect x="30" y="1940" width="1540" height="90" rx="6" fill="#fafafa" stroke="#bbb"/>
+  <text x="40" y="1960" class="boxTitle">범례</text>
+  <line x1="40" y1="1975" x2="70" y2="1975" class="edgeBlue" marker-end="url(#arrBlue)"/>
+  <text x="78" y="1979" class="small">DI/메서드 호출</text>
+  <line x1="200" y1="1975" x2="230" y2="1975" class="edgeGreen" marker-end="url(#arrGreen)"/>
+  <text x="238" y="1979" class="small">Claude API (스트리밍)</text>
+  <line x1="380" y1="1975" x2="410" y2="1975" class="edgeOrange" marker-end="url(#arrOrange)"/>
+  <text x="418" y="1979" class="small">사용자 입출력 / 루프 흐름</text>
+  <line x1="560" y1="1975" x2="590" y2="1975" class="edgeDash" marker-end="url(#arr)"/>
+  <text x="598" y="1979" class="small">상속 / Reflection 발견</text>
+  <text x="40" y="2004" class="small">• Discriminated Union: ApiStreamSpan.Result = EndSpan | ExecuteTools | Continue  — switch 패턴매칭으로 분기</text>
+  <text x="40" y="2020" class="small">• Streaming FSM: ApiStreamSpan이 RawMessageStreamEvent를 Idle → TextBlock/ThinkingBlock/ToolUseBlock 상태로 누적 → Complete()에서 Block/ToolCalls 확정</text>
+</svg>

@@ -1,0 +1,54 @@
+﻿@inherits JsComponentBase
+
+<!-- 메시지 입력 영역입니다. -->
+<div class="p-4 bg-[#1b1b1b] border-t border-[#2a2a2a] relative z-20">
+    <div class="max-w-4xl mx-auto">
+
+        <!-- 입력 폼: Enter로 제출, 기본 submit 동작은 막습니다. -->
+        <form @onsubmit="HandleSubmit" @onsubmit:preventDefault>
+
+            <!-- 입력 컨테이너: 포커스 시 파란색 테두리가 나타납니다. -->
+            <div class="relative bg-[#151515] rounded-md border border-[#333] shadow-xl focus-within:ring-1 focus-within:ring-[#0070e0] focus-within:border-[#0070e0] transition-all">
+
+                <!-- 텍스트 입력: oninput으로 실시간 바인딩합니다. 높이 고정, 내부 스크롤합니다. -->
+                <textarea @ref="TextAreaRef"
+                          @bind="InputText"
+                          @bind:event="oninput"
+                          class="w-full bg-transparent border-none text-[14px] text-[#e0e0e0] placeholder-[#555] py-4 pb-12 px-3 focus:ring-0 resize-none h-[120px] overflow-y-auto font-normal tracking-wide leading-relaxed"
+                          placeholder="메시지를 입력하세요..."
+                          rows="1">
+                </textarea>
+
+                <!-- 하단 바: textarea 위에 떠 있는 전송 버튼 영역입니다. -->
+                <div class="flex items-center justify-between px-2 pb-2 absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#151515] via-[#151515] to-transparent pt-4">
+
+                    <!-- 하단바 좌측 -->
+                    <div class="flex items-center gap-2 pointer-events-auto">
+                        <!-- 모델 선택 -->
+                        <ModelSelector />
+                    </div>
+                    
+                    <!-- 우측: Thinking 토글, Effort 선택, 전송 버튼입니다. -->
+                    <div class="flex items-center gap-3 pointer-events-auto">
+                        
+                        <!-- Thinking 선택 -->
+                        <div class="flex items-center gap-3 bg-[#1a1a1a] px-2 py-1 rounded-sm border border-[#333]">
+                            <ThinkingToggle/>
+                            <div class="h-3 w-px bg-[#333]"></div>
+                            <EffortSelector />
+                        </div>
+
+                        <!-- 전송 버튼: 클릭 또는 Enter로 메시지를 보냅니다. -->
+                        <button type="submit"
+                                class="flex items-center justify-center size-7 rounded-sm transition-all active:scale-95 bg-[#0070e0] hover:bg-[#0060c0] text-white shadow-[0_0_10px_rgba(0,112,224,0.3)] active:shadow-inner">
+                            <span class="material-symbols-outlined text-[18px]">arrow_upward</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+        
+        <!-- 모드 스위처입니다. -->
+        <ModeSwitcher @ref="ModeSwitcherRef" />
+    </div>
+</div>

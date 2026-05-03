@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html class="dark" lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UnrealAgent</title>
+
+    <!-- Google Fonts (Inter, JetBrains Mono, Material Symbols 아이콘) -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+
+    <!-- Tailwind CSS (클래스 기반 스타일링 프레임워크) -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "ue-bg": "#151515",
+                    "ue-panel": "#1b1b1b",
+                    "ue-header": "#242424",
+                    "ue-accent": "#0070e0",
+                    "ue-text-main": "#dddddd",
+                    "ue-text-muted": "#999999",
+                    "ue-border": "#333333",
+                    "code-bg": "#0d0d0d",
+                    "ue-warning": "#d68a51",
+                    "ue-sonnet": "#2db7a6",
+                    "ue-extra": "#a855f7",
+                },
+                fontFamily: {
+                    "sans": ["Inter", "sans-serif"],
+                    "mono": ["JetBrains Mono", "monospace"],
+                },
+                boxShadow: {
+                    "ue-glow": "0 0 10px rgba(0, 112, 224, 0.15)",
+                    "ue-panel": "0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3)",
+                    "ue-warning-glow": "0 0 8px rgba(214, 138, 81, 0.25)",
+                    "ue-sonnet-glow": "0 0 8px rgba(45, 183, 166, 0.25)",
+                    "ue-extra-glow": "0 0 8px rgba(168, 85, 247, 0.25)",
+                },
+                backgroundImage: {
+                    "glass-gradient": "linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%)",
+                },
+                borderRadius: { "DEFAULT": "0.25rem", "lg": "0.375rem", "xl": "0.5rem", "full": "9999px" },
+                animation: {
+                    "shimmer": "shimmer 2s linear infinite",
+                },
+                keyframes: {
+                    shimmer: { "0%": { backgroundPosition: "-1000px 0" }, "100%": { backgroundPosition: "1000px 0" } },
+                }
+            },
+        },
+    }
+    </script>
+
+    <!-- highlight.js (코드 구문 강조 라이브러리) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/atom-one-dark.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/languages/python.min.js"></script>
+
+    <!-- 커스텀 CSS (Tailwind로 대체 불가한 스타일) -->
+    <link rel="stylesheet" href="css/app.css?v=@CacheBuster" />
+    
+</head>
+<body class="bg-[#0f0f0f] text-[#cfcfcf] font-sans h-screen flex flex-col overflow-hidden selection:bg-[#0070e0] selection:text-white">
+    <!-- Blazor 라우터 (URL에 맞는 페이지를 렌더링) -->
+    <Routes @rendermode="RenderMode.InteractiveServer" />
+
+    <!-- Blazor SignalR 연결 스크립트 -->
+    <script src="_framework/blazor.web.js"></script>
+
+</body>
+</html>
+
+@code {
+    /// <summary>서버 시작 시 생성되는 캐시 버스팅 값 (브라우저 캐시 무효화용)</summary>
+    private static readonly string CacheBuster = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+}

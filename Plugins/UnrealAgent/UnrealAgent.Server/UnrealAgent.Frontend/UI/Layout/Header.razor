@@ -1,0 +1,29 @@
+﻿<header class="flex items-center justify-between whitespace-nowrap border-b border-[#2a2a2a] bg-[#1a1a1a] px-5 py-2 shrink-0 z-30 shadow-md">
+    <!-- 로고 + 버전 -->
+    <div class="flex items-center gap-3">
+        <div class="size-7 flex items-center justify-center rounded bg-gradient-to-b from-[#444] to-[#222] border border-[#555] shadow-inner relative overflow-hidden">
+            <div class="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-50"></div>
+            <span class="font-sans font-black text-white text-sm leading-none drop-shadow-md relative z-10">U</span>
+        </div>
+        <h2 class="text-sm font-semibold text-[#e0e0e0] tracking-tight uppercase opacity-90">
+            UnrealAgent
+            <span class="text-[10px] bg-[#333] px-1.5 py-0.5 rounded text-[#888] ml-2 font-mono tracking-wide border border-[#444]">vBeta</span>
+        </h2>
+    </div>
+    
+    <!-- 연결 상태 + 설정 -->
+    <div class="flex items-center gap-4">
+        <div class="h-4 w-px bg-[#333]"></div>
+        <div class="flex items-center gap-1">
+            <!-- Auth 설정 창 -->
+            <button @onclick="OnSettingsClick"
+                    class="relative group flex items-center justify-center size-7 rounded hover:bg-[#2a2a2a] transition-colors text-[#888] hover:text-[#ddd]">
+                <span class="material-symbols-outlined text-[18px]">settings</span>
+                <div class="absolute top-full right-0 mt-2 w-44 p-2.5 bg-[#151515]/90 backdrop-blur-md border border-[#333] rounded shadow-xl text-[10px] z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-all duration-200">
+                    <div class="text-[#e0e0e0] font-medium leading-tight text-center">API Key 인증 관리</div>
+                    <div class="absolute top-[-5px] right-2.5 w-2.5 h-2.5 bg-[#151515]/90 border-t border-l border-[#333] rotate-45"></div>
+                </div>
+            </button>
+        </div>
+    </div>
+</header>

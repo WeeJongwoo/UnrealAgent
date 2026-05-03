@@ -1,0 +1,20 @@
+﻿<!-- 어시스턴트 메시지 (좌측 정렬)입니다. -->
+<div class="flex gap-4 max-w-5xl mx-auto w-full z-10 msg-enter">
+    <!-- AI 아바타 -->
+    <div class="size-8 shrink-0 rounded bg-gradient-to-b from-[#333] to-[#1a1a1a] flex items-center justify-center shadow-lg relative overflow-hidden border border-[#444] mt-1">
+        <span class="font-sans font-black text-[#e0e0e0] text-sm leading-none drop-shadow-sm">U</span>
+    </div>
+    <div class="flex flex-col gap-3 w-full max-w-3xl">
+        <div class="flex items-baseline gap-2">
+            <span class="text-xs font-bold text-[#e0e0e0] tracking-wide">UnrealAgent</span>
+            <span class="text-[10px] text-[#555] font-sans">@Message.Timestamp.ToString("h:mm tt")</span>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Message.Content))
+        {
+            <div class="ml-11 mt-3 text-[14px] text-[#e0e0e0] leading-relaxed tracking-wide max-w-3xl markdown-body">
+                @((MarkupString)RenderMarkdown(Message.Content))
+            </div>
+        }
+    </div>
+</div>

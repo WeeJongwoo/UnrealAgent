@@ -1,0 +1,24 @@
+﻿<!-- web_fetch 결과 콘텐츠입니다. -->
+@if (Message.bIsCompleted && !string.IsNullOrEmpty(Message.Content))
+{
+    <div class="bg-[#0f0f0f] border border-[#2a2a2a] rounded overflow-hidden shadow-lg max-w-lg">
+        <!-- URL 헤더 바 -->
+        <div class="flex items-center gap-2 px-3 py-2 border-b border-[#222] bg-[#131313]">
+            <span class="material-symbols-outlined text-[12px] text-[#888]">language</span>
+            <a href="@FetchUrl" target="_blank" rel="noopener noreferrer"
+               class="text-[10px] font-mono text-[#888] hover:text-white hover:underline transition-colors truncate">
+                @Domain
+            </a>
+        </div>
+        <!-- 페치된 콘텐츠 -->
+        <div class="p-3 text-[11px] text-[#ccc] leading-relaxed font-sans whitespace-pre-wrap break-words max-h-64 overflow-y-auto">
+            @Message.Content
+        </div>
+    </div>
+}
+else if (Message.bIsCompleted)
+{
+    <div class="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3 max-w-lg">
+        <span class="text-[10px] text-[#666] font-mono">페이지를 가져올 수 없음</span>
+    </div>
+}

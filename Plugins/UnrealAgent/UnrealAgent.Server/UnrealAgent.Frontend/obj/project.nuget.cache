@@ -1,0 +1,31 @@
+{
+  "version": 2,
+  "dgSpecHash": "JnDFT8IWcbU=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\USER\\OneDrive\\Desktop\\Agent\\Plugins\\UnrealAgent\\UnrealAgent.Server\\UnrealAgent.Frontend\\UnrealAgent.Frontend.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\USER\\.nuget\\packages\\anthropic\\12.8.0\\anthropic.12.8.0.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\htmlagilitypack\\1.12.4\\htmlagilitypack.1.12.4.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\markdig\\1.1.1\\markdig.1.1.1.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\11.0.0-preview.2.26159.112\\microsoft.aspnetcore.app.internal.assets.11.0.0-preview.2.26159.112.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\microsoft.extensions.ai.abstractions\\10.2.0\\microsoft.extensions.ai.abstractions.10.2.0.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\microsoft.extensions.configuration\\11.0.0-preview.1.26104.118\\microsoft.extensions.configuration.11.0.0-preview.1.26104.118.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\11.0.0-preview.2.26159.112\\microsoft.extensions.configuration.abstractions.11.0.0-preview.2.26159.112.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\microsoft.extensions.configuration.binder\\11.0.0-preview.1.26104.118\\microsoft.extensions.configuration.binder.11.0.0-preview.1.26104.118.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\microsoft.extensions.dependencyinjection\\11.0.0-preview.1.26104.118\\microsoft.extensions.dependencyinjection.11.0.0-preview.1.26104.118.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\11.0.0-preview.2.26159.112\\microsoft.extensions.dependencyinjection.abstractions.11.0.0-preview.2.26159.112.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\microsoft.extensions.diagnostics\\11.0.0-preview.1.26104.118\\microsoft.extensions.diagnostics.11.0.0-preview.1.26104.118.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\microsoft.extensions.diagnostics.abstractions\\11.0.0-preview.2.26159.112\\microsoft.extensions.diagnostics.abstractions.11.0.0-preview.2.26159.112.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\microsoft.extensions.fileproviders.abstractions\\11.0.0-preview.2.26159.112\\microsoft.extensions.fileproviders.abstractions.11.0.0-preview.2.26159.112.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\microsoft.extensions.hosting.abstractions\\11.0.0-preview.2.26159.112\\microsoft.extensions.hosting.abstractions.11.0.0-preview.2.26159.112.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\microsoft.extensions.http\\11.0.0-preview.1.26104.118\\microsoft.extensions.http.11.0.0-preview.1.26104.118.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\microsoft.extensions.logging\\11.0.0-preview.1.26104.118\\microsoft.extensions.logging.11.0.0-preview.1.26104.118.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\11.0.0-preview.2.26159.112\\microsoft.extensions.logging.abstractions.11.0.0-preview.2.26159.112.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\microsoft.extensions.options\\11.0.0-preview.2.26159.112\\microsoft.extensions.options.11.0.0-preview.2.26159.112.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\microsoft.extensions.options.configurationextensions\\11.0.0-preview.1.26104.118\\microsoft.extensions.options.configurationextensions.11.0.0-preview.1.26104.118.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\microsoft.extensions.primitives\\11.0.0-preview.2.26159.112\\microsoft.extensions.primitives.11.0.0-preview.2.26159.112.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\reversemarkdown\\5.2.0\\reversemarkdown.5.2.0.nupkg.sha512",
+    "C:\\Users\\USER\\.nuget\\packages\\system.diagnostics.diagnosticsource\\11.0.0-preview.2.26159.112\\system.diagnostics.diagnosticsource.11.0.0-preview.2.26159.112.nupkg.sha512"
+  ],
+  "logs": []
+}

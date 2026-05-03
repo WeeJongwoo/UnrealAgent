@@ -1,0 +1,12 @@
+C:\Users\USER\OneDrive\Desktop\Agent\Plugins\UnrealAgent\UnrealAgent.Server\Build\Release\UnrealAgent.Backend.deps.json
+C:\Users\USER\OneDrive\Desktop\Agent\Plugins\UnrealAgent\UnrealAgent.Server\Build\Release\UnrealAgent.Backend.dll
+C:\Users\USER\OneDrive\Desktop\Agent\Plugins\UnrealAgent\UnrealAgent.Server\Build\Release\UnrealAgent.Backend.pdb
+C:\Users\USER\OneDrive\Desktop\Agent\Plugins\UnrealAgent\UnrealAgent.Server\UnrealAgent.Backend\obj\Release\UnrealAgent.Backend.csproj.AssemblyReference.cache
+C:\Users\USER\OneDrive\Desktop\Agent\Plugins\UnrealAgent\UnrealAgent.Server\UnrealAgent.Backend\obj\Release\UnrealAgent.Backend.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\USER\OneDrive\Desktop\Agent\Plugins\UnrealAgent\UnrealAgent.Server\UnrealAgent.Backend\obj\Release\UnrealAgent.Backend.AssemblyInfoInputs.cache
+C:\Users\USER\OneDrive\Desktop\Agent\Plugins\UnrealAgent\UnrealAgent.Server\UnrealAgent.Backend\obj\Release\UnrealAgent.Backend.AssemblyInfo.cs
+C:\Users\USER\OneDrive\Desktop\Agent\Plugins\UnrealAgent\UnrealAgent.Server\UnrealAgent.Backend\obj\Release\UnrealAgent.Backend.csproj.CoreCompileInputs.cache
+C:\Users\USER\OneDrive\Desktop\Agent\Plugins\UnrealAgent\UnrealAgent.Server\UnrealAgent.Backend\obj\Release\UnrealAgent.Backend.dll
+C:\Users\USER\OneDrive\Desktop\Agent\Plugins\UnrealAgent\UnrealAgent.Server\UnrealAgent.Backend\obj\Release\refint\UnrealAgent.Backend.dll
+C:\Users\USER\OneDrive\Desktop\Agent\Plugins\UnrealAgent\UnrealAgent.Server\UnrealAgent.Backend\obj\Release\UnrealAgent.Backend.pdb
+C:\Users\USER\OneDrive\Desktop\Agent\Plugins\UnrealAgent\UnrealAgent.Server\UnrealAgent.Backend\obj\Release\ref\UnrealAgent.Backend.dll

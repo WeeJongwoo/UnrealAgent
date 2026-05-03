@@ -1,0 +1,30 @@
+﻿<!-- web_search 검색 결과 목록입니다. -->
+@if (Message.bIsCompleted && Results.Count > 0)
+{
+    <div class="bg-[#0f0f0f] border border-[#2a2a2a] rounded overflow-hidden shadow-lg divide-y divide-[#222] max-w-lg">
+        @foreach (SearchResult Item in Results)
+        {
+            <div class="p-3 hover:bg-[#131313] transition-colors">
+                <div class="flex flex-col gap-1">
+                    <a href="@Item.Url" target="_blank" rel="noopener noreferrer"
+                       class="text-[11px] font-bold text-[#ddd] hover:text-white hover:underline transition-colors leading-tight">
+                        @Item.Title
+                    </a>
+                    @if (!string.IsNullOrEmpty(Item.PageAge))
+                    {
+                        <span class="text-[9px] text-[#666] font-mono">@Item.PageAge</span>
+                    }
+                    <div class="flex items-center gap-2 mt-0.5">
+                        <span class="text-[9px] font-mono text-[#555]">@Item.Domain</span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else if (Message.bIsCompleted)
+{
+    <div class="bg-[#0f0f0f] border border-[#2a2a2a] rounded p-3 max-w-lg">
+        <span class="text-[10px] text-[#666] font-mono">검색 결과 없음</span>
+    </div>
+}

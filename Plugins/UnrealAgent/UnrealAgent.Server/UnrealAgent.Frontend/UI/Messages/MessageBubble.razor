@@ -1,0 +1,35 @@
+﻿@using UnrealAgent.Backend.Chat
+
+@* 메시지 타입에 따라 적절한 렌더링 컴포넌트로 분기합니다. *@
+@switch (UIMessage)
+{
+    case ChatUIMessage.User UserMsg:
+    {
+        <UserMessage Message="UserMsg" />
+        break;
+    }
+        
+    case ChatUIMessage.Assistant AsstMsg:
+    {
+        <AssistantMessage Message="AsstMsg" />
+        break;
+    }
+        
+    case ChatUIMessage.Thinking ThinkMsg:
+    {
+        <ThinkingBlock Message="ThinkMsg"/>
+        break;
+    }
+        
+    case ChatUIMessage.Tool ToolMsg:
+    {
+        <ToolBlock Message="ToolMsg" />
+        break;
+    }
+        
+    case ChatUIMessage.System SysMsg:
+    {
+        <SystemMessage Message = "SysMsg" />
+        break;
+    }
+}
